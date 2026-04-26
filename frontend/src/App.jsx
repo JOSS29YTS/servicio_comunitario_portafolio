@@ -1,0 +1,104 @@
+import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
+import Sidebar from './components/Sidebar'
+import Header from './components/Header'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Dashboard from './pages/Dashboard'
+import Proyectos from './pages/Proyectos'
+import NuevoProyecto from './pages/NuevoProyecto'
+import Buscar from './pages/Buscar'
+import Configuracion from './pages/Configuracion'
+
+function AppLayout({ children }) {
+  return (
+    <div className="app-layout">
+      <Sidebar />
+      <div className="main-content">
+        <Header />
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// Spinner mientras verifica el token guardado
+function LoadingScreen() {
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--navy-900)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      gap: 16,
+    }}>
+      <div style={{
+        width: 40, height: 40,
+        border: '3px solid rgba(99,102,241,0.3)',
+        borderTop: '3px solid var(--indigo-500)',
+        borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite',
+      }} />
+      <p style={{ color: 'var(--navy-400)', fontSize: 13 }}>Cargando sistema...</p>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  )
+}
+
+function AppRoutes() {
+  const { loading } = useAuth()
+  if (loading) return <LoadingScreen />
+
+  return (
+    <Routes>
+      {/* Ruta pública */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/registro" element={<Register />} />
+
+      {/* Rutas protegidas */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <AppLayout><Dashboard /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/proyectos" element={
+        <ProtectedRoute>
+          <AppLayout><Proyectos /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/nuevo-proyecto" element={
+        <ProtectedRoute>
+          <AppLayout><NuevoProyecto /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/buscar" element={
+        <ProtectedRoute>
+          <AppLayout><Buscar /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/configuracion" element={
+        <ProtectedRoute>
+          <AppLayout><Configuracion /></AppLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Redirecciones */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  )
+}
