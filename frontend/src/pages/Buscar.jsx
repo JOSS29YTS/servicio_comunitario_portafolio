@@ -45,6 +45,7 @@ export default function Buscar() {
 
   return (
     <div className="page-content page-enter">
+
       <div className="card card-pad" style={{ marginBottom: 24 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 140px 180px auto', gap: 16, alignItems: 'center' }}>
           <div className="search-bar">
