@@ -71,8 +71,8 @@
   --radius-full: 9999px;
   /* Semantic Text & BG Colors */
   --text-primary: var(--navy-900);
-  --text-secondary: var(--navy-500);
-  --text-muted: var(--navy-400);
+  --text-secondary: var(--navy-600);
+  --text-muted: var(--navy-500);
   --bg-card-special: var(--white);
   --bg-icon-special: var(--navy-100);
   --border-subtle: var(--navy-100);
@@ -498,6 +498,7 @@ html, body {
   background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(4px);
   z-index: 1;
+  color: #FFFFFF;
 }
 
 .stat-card.emerald { background: linear-gradient(135deg, #10B981, #059669); }
@@ -510,18 +511,18 @@ html, body {
   z-index: 1;
 }
 
-.stat-value {
+.stat-card .stat-value {
   font-size: 38px;
   font-weight: 800;
-  color: var(--white);
+  color: #FFFFFF !important;
   line-height: 1;
 }
 
-.stat-label {
+.stat-card .stat-label {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #FFFFFF !important;
   margin-top: 4px;
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

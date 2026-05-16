@@ -145,7 +145,7 @@ export default function Dashboard() {
             background: 'var(--bg-card-special)',
             border: '2px solid var(--indigo-200)',
           }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--indigo-500)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--indigo-600)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               ¿Tienes un nuevo proyecto?
             </p>
             <h3 style={{ fontSize: 16, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 16, lineHeight: 1.3 }}>
