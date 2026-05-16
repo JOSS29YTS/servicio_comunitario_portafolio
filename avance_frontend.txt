@@ -1,0 +1,49 @@
+========================================================================
+BORRADOR DE AVANCE - SERVICIO COMUNITARIO
+TÍTULO: DESARROLLO DE LA INTERFAZ DE USUARIO (FRONTEND)
+SISTEMA: REPOSITORIO ACADÉMICO / COLEGIO NUESTRA SEÑORA DE FÁTIMA
+========================================================================
+
+1. INTRODUCCIÓN AL AVANCE
+El presente avance detalla el progreso alcanzado en el diseño y programación de la Interfaz de Usuario (Frontend) del Sistema de Repositorio Académico. Durante esta fase, el esfuerzo se centró en construir una experiencia de usuario (UX) moderna, rápida e intuitiva para las autoridades del colegio (Directora, Subdirectora y Profesores), asegurando que el registro y consulta de documentos sea un proceso libre de fricciones.
+
+2. ARQUITECTURA Y TECNOLOGÍAS UTILIZADAS
+Para la construcción de la interfaz se implementó una arquitectura basada en componentes reutilizables utilizando las siguientes tecnologías:
+- Librería Principal: React.js
+- Herramienta de Construcción: Vite (para un empaquetado de alta velocidad).
+- Gestor de Paquetes: pnpm (elegido por su eficiencia en el manejo del espacio en disco y velocidad de instalación frente a alternativas tradicionales).
+- Enrutamiento: React Router DOM (para la navegación de página única o SPA).
+- Iconografía: Lucide-React.
+- Estilos: CSS Puro (Vanilla CSS) basado en un sistema de variables globales para soportar modos visuales (Claro/Oscuro).
+
+3. MÓDULOS DESARROLLADOS (HITO FRONTEND)
+Hasta la fecha, la estructura visual y lógica del cliente se encuentra completada, abarcando los siguientes módulos:
+
+A. Sistema de Autenticación y Enrutamiento Protegido
+- Se diseñaron las interfaces de Login y Registro.
+- Se implementó un "AuthContext" (Contexto de Autenticación) en React para gestionar el estado de la sesión del usuario a nivel global.
+- Se crearon Rutas Protegidas (`ProtectedRoute.jsx`) que impiden el acceso al Panel Principal a usuarios que no dispongan de credenciales válidas, garantizando la seguridad en la navegación del cliente.
+
+B. Dashboard y Navegación (Panel Principal)
+- Se desarrolló un menú lateral (Sidebar) colapsable y responsivo.
+- Se maquetó el Dashboard central (`Dashboard.jsx`), el cual expone tarjetas de métricas clave (Total de Proyectos, PDFs almacenados, etc.). 
+- Recientemente, se aplicaron mejoras de accesibilidad (Contraste UI), asegurando que las tarjetas informativas utilicen textos en blanco puro (#FFFFFF) para garantizar la legibilidad en entornos de alta iluminación (Modo Claro).
+
+C. Gestión de Documentos (Proyectos)
+Se programaron las vistas críticas para la manipulación de la información:
+- Buscador Inteligente (`Buscar.jsx`): Interfaz preparada para filtrar proyectos por año, categoría y estudiante.
+- Directorio de Proyectos (`Proyectos.jsx`): Tabla interactiva para la visualización del histórico.
+- Registro de Proyectos (`NuevoProyecto.jsx`): Se construyó un formulario estructurado en 5 pasos lógicos. Incluye validación de campos vacíos en tiempo real y un área dinámica de "Drag & Drop" (Arrastrar y Soltar) lista para la captura de archivos PDF, utilizando el objeto FormData para su futura transmisión.
+
+D. Administración y Configuración
+- Gestión de Usuarios (`Usuarios.jsx`): Interfaz en formato de tabla para listar directivos y profesores, incluyendo menús desplegables para suspender accesos o cambiar roles.
+- Configuración del Sistema (`Configuracion.jsx`): Panel de ajustes generales que simula el control de preferencias de red, información del perfil y monitoreo del almacenamiento local.
+
+4. CONSIDERACIONES DE DISEÑO (UI/UX)
+El sistema visual fue creado desde cero sin depender de librerías pesadas como Bootstrap o Tailwind. Se estructuró un archivo `index.css` que actúa como Sistema de Diseño (Design System). Se incorporó:
+- Soporte nativo para "Modo Oscuro" adaptativo.
+- Efectos modernos tipo "Glassmorphism" (fondos semitransparentes desenfocados).
+- Micro-animaciones en los botones y transiciones suaves para mejorar la retroalimentación visual al usuario.
+
+5. PRÓXIMOS PASOS
+Con la totalidad de la interfaz de usuario maqueta y la lógica de componentes (estado local de React) funcionando correctamente, el siguiente hito del proyecto consistirá en integrar la librería Axios para comunicar este Frontend con el servidor Backend (Node.js) y la base de datos (MySQL), reemplazando los datos simulados por la información real del colegio.
