@@ -47,7 +47,7 @@ Cómo trabajan:
 
 Para garantizar que el sistema nunca deje de funcionar y los datos estén a salvo de cualquier accidente físico o ataque de red:
 
-1. IP Estática Obligatoria: Se configura el Router del colegio para reservar la dirección IP local (ej: 192.168.1.50) a la MAC de la PC de la Directora, garantizando que nunca cambie ni siquiera ante reinicios del router.
+1. IP Estática Configurada en Windows: Como no hay acceso administrativo al router del colegio, se configurará la IP fija directamente desde los ajustes de Red de Windows en la PC de la Directora. Se elegirá una IP fuera del rango habitual de asignación automática (ej: 192.168.1.200) para evitar conflictos, garantizando que el servidor siempre responda en la misma dirección.
 2. Apertura de Firewall Segura: Se crea una regla de entrada en el Firewall de Windows de la Directora para permitir tráfico libre ÚNICAMENTE en el puerto 3000 (Node.js). MySQL permanece cerrado y blindado tras el firewall, aceptando peticiones únicamente de Node.js de forma interna.
 3. Protección Eléctrica: La PC de la Directora debe contar idealmente con un UPS para evitar corrupción de la base de datos ante apagones repentinos.
 4. Respaldo en la Nube Automatizado con Logs: Un archivo .bat programado con el Programador de Tareas de Windows se ejecuta solo todas las tardes a las 4:00 PM. Este extrae la base de datos con mysqldump, copia la carpeta de PDFs y lo deposita en la unidad virtual de Google Drive (G:\Mi unidad\Respaldos_Colegio).
