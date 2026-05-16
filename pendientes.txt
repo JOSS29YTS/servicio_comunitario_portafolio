@@ -1,0 +1,52 @@
+============================================================
+REPOSITORIO ACADÉMICO - COLEGIO NSF
+BITÁCORA DE TAREAS PENDIENTES (BACKEND)
+============================================================
+
+Este archivo contiene las tareas técnicas necesarias para 
+conectar la interfaz profesional con la lógica del servidor.
+
+1. GESTIÓN DE USUARIOS Y ROLES
+------------------------------------------------------------
+[ ] Crear modelo/tabla 'Rol' (id_rol, nombre_rol).
+[ ] Roles iniciales: Director, Subdirector, Profesor.
+[ ] Actualizar tabla 'Usuario':
+    - Agregar 'telefono' (String).
+    - Agregar 'id_rol' (FK a Rol).
+    - Agregar 'estado' (ENUM: 'Pendiente', 'Activo', 'Rechazado').
+    - Agregar 'ultima_conexion' (DateTime).
+[ ] Crear endpoint para listar usuarios en estado 'Pendiente'.
+[ ] Crear endpoint para asignar rol y activar usuario (Aprobación).
+
+2. ESTADÍSTICAS Y MÉTRICAS REALES
+------------------------------------------------------------
+[ ] Crear endpoint de 'Dashboard Stats' que retorne:
+    - Conteo total de proyectos.
+    - Conteo total de archivos PDF únicos.
+    - Conteo de usuarios activos.
+    - Suma del tamaño total de archivos almacenados (en bytes).
+[ ] Lógica para calcular espacio en disco usado (vs límite de 500MB).
+
+3. SEGURIDAD Y PERFIL
+------------------------------------------------------------
+[ ] Crear endpoint para 'Actualizar Perfil' (Solo teléfono por ahora).
+[ ] Implementar endpoint de 'Cambio de Contraseña' (Validar contraseña actual + Hash nueva).
+[ ] Registrar 'ultima_conexion' en cada Login exitoso.
+[ ] Lógica de expiración de sesión para el frontend (Time to Live del JWT).
+
+5. ARCHIVOS Y ALMACENAMIENTO
+------------------------------------------------------------
+[ ] Validar tipos de archivos permitidos (Solo PDF).
+[ ] Validar tamaño máximo por archivo individual.
+[ ] Implementar lógica de eliminación de archivos físicos cuando se borra un proyecto.
+
+6. SINCRONIZACIÓN Y RESPALDO (BACKUP)
+------------------------------------------------------------
+[ ] Crear endpoint para 'Forzar Sincronización':
+    - Debe disparar un volcado de base de datos (.sql).
+    - Debe re-escanear la carpeta de almacenamiento para actualizar tamaños.
+    - Debe retornar la nueva fecha de "Último Respaldo" al frontend.
+[ ] Configurar tarea programada (Cron Job) para backup automático diario.
+
+------------------------------------------------------------
+Documento creado por Alejandro Villa - 16/05/2026

@@ -1,97 +1,252 @@
-import React from 'react'
-import { Settings, User, Database, Shield } from 'lucide-react'
+import React, { useState } from 'react'
+import { 
+  Settings, User, Database, Shield, Camera, 
+  Key, Bell, Globe, Activity, HardDrive, 
+  FileText, Users, Mail, ExternalLink, RefreshCw
+} from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function Configuracion() {
   const { user } = useAuth()
+  const [notifEnabled, setNotifEnabled] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [telefono, setTelefono] = useState('0412-0000000')
+
+  const toggleNotifications = async () => {
+    if (!notifEnabled) {
+      // Pedir permiso al navegador
+      const permission = await Notification.requestPermission()
+      if (permission === 'granted') {
+        setNotifEnabled(true)
+        // Enviar notificación de prueba
+        new Notification('¡Sistema Activado! 🔔', {
+          body: 'Las notificaciones de escritorio para el Repositorio Académico están funcionando correctamente.',
+          icon: '/logo_fatima.svg' // Opcional: ruta al logo
+        })
+      } else {
+        alert('Para activar las notificaciones, debes permitir el acceso en la configuración de tu navegador.')
+      }
+    } else {
+      setNotifEnabled(false)
+    }
+  }
+
   return (
     <div className="page-content page-enter">
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, alignItems: 'stretch' }}>
-        {/* Datos del usuario */}
-        <div className="card card-pad">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <div className="user-avatar" style={{ width: 36, height: 36, fontSize: 14 }}>
-              {user?.nombre_completo ? user.nombre_completo.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : 'AV'}
-            </div>
-            <h3 style={{ fontWeight: 700, fontSize: 15, color: 'var(--navy-800)' }}>Perfil de Usuario</h3>
-            <span className="badge badge-navy" style={{ marginLeft: 'auto' }}>Solo lectura</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <div className="detail-label">Nombre</div>
-              <div className="detail-value">{user?.nombre_completo || 'Usuario'}</div>
-            </div>
-            <div>
-              <div className="detail-label">Correo</div>
-              <div className="detail-value">{user?.email}</div>
+      <div className="config-grid">
+        
+        {/* COLUMNA IZQUIERDA */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          
+          {/* Perfil del Usuario */}
+          <div className="card card-pad">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+              <div className="avatar-edit-container">
+                <div className="user-avatar">
+                  {user?.iniciales || 'AV'}
+                </div>
+                <button className="avatar-edit-btn" title="Cambiar foto">
+                  <Camera size={14} />
+                </button>
+              </div>
+              <button 
+                className={`btn ${isEditing ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? 'Guardar' : 'Editar Perfil'}
+              </button>
             </div>
 
-          </div>
-        </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <div className="detail-label">Nombre Completo</div>
+                  <div className="detail-value">{user?.nombre_completo}</div>
+                </div>
+                <div>
+                  <div className="detail-label">Teléfono</div>
+                  {isEditing ? (
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      value={telefono} 
+                      onChange={e => setTelefono(e.target.value)}
+                      style={{ padding: '4px 8px', height: 'auto', fontSize: 13.5 }}
+                    />
+                  ) : (
+                    <div className="detail-value">{telefono}</div>
+                  )}
+                </div>
+              </div>
 
-        {/* Info del sistema */}
-        <div className="card card-pad">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <div style={{
-              width: 36, height: 36, background: 'var(--amber-100)', borderRadius: 'var(--radius-md)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--amber-500)'
-            }}>
-              <Settings size={18} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <div className="detail-label">Correo</div>
+                  <div className="detail-value">{user?.email}</div>
+                </div>
+                <div>
+                  <div className="detail-label">Último Acceso</div>
+                  <div className="detail-value" style={{ fontSize: 12.5 }}>Hoy, 10:45 AM</div>
+                </div>
+              </div>
+
+              <div>
+                <div className="detail-label">Rol / Cargo</div>
+                <div className="detail-value">
+                  <span className="badge badge-indigo">Director</span>
+                </div>
+              </div>
             </div>
-            <h3 style={{ fontWeight: 700, fontSize: 15, color: 'var(--navy-800)' }}>Información del Sistema</h3>
+            
+            <button className="btn btn-ghost" style={{ marginTop: 24, width: '100%', justifyContent: 'center', gap: 8 }}>
+              <Key size={16} /> Cambiar Contraseña
+            </button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <div className="detail-label">Institución</div>
-              <div className="detail-value">Colegio Nuestra Señora de Fátima</div>
-            </div>
-            <div>
-              <div className="detail-label">Sistema</div>
-              <div className="detail-value">Repositorio Académico v1.0</div>
-            </div>
-            <div>
-              <div className="detail-label">Estado</div>
-              <div className="detail-value">
-                <span className="badge badge-green">🟢 Operativo</span>
+
+          {/* Preferencias */}
+          <div className="card card-pad">
+            <h3 style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Settings size={18} color="var(--indigo-500)" /> Preferencias del Sistema
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="stat-row">
+                <div className="stat-label">
+                  <Bell size={16} /> Notificaciones de escritorio
+                </div>
+                <label className="switch">
+                  <input type="checkbox" checked={notifEnabled} onChange={toggleNotifications} />
+                  <span className="slider"></span>
+                </label>
+              </div>
+              <div className="stat-row">
+                <div className="stat-label">
+                  <Globe size={16} /> Idioma del sistema
+                </div>
+                <div className="stat-value">Español (VE)</div>
+              </div>
+              <div className="stat-row" style={{ borderBottom: 'none' }}>
+                <div className="stat-label">
+                  <Activity size={16} /> Registro de actividad
+                </div>
+                <span className="badge badge-green">Activo</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Base de datos */}
-        <div className="card card-pad">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <div style={{
-              width: 36, height: 36, background: 'var(--green-100)', borderRadius: 'var(--radius-md)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--green-500)'
-            }}>
-              <Database size={18} />
+        {/* COLUMNA DERECHA */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          
+          {/* Estadísticas de Impacto */}
+          <div className="card card-pad">
+            <h3 style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 20 }}>
+              Estadísticas de Impacto
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div className="stat-row">
+                <div className="stat-label"><FileText size={16} color="var(--indigo-500)" /> Proyectos Registrados</div>
+                <div className="stat-value">0</div>
+              </div>
+              <div className="stat-row">
+                <div className="stat-label"><Database size={16} color="var(--green-500)" /> Documentos (PDFs)</div>
+                <div className="stat-value">0</div>
+              </div>
+              <div className="stat-row">
+                <div className="stat-label"><Users size={16} color="var(--purple-500)" /> Usuarios Activos</div>
+                <div className="stat-value">1</div>
+              </div>
+              <div className="stat-row" style={{ borderBottom: 'none' }}>
+                <div className="stat-label"><HardDrive size={16} color="var(--amber-500)" /> Almacenamiento</div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="stat-value">0 MB</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>de 500 MB usados</div>
+                </div>
+              </div>
             </div>
-            <h3 style={{ fontWeight: 700, fontSize: 15, color: 'var(--navy-800)' }}>Base de Datos</h3>
-            <span className="badge badge-navy" style={{ marginLeft: 'auto' }}>Solo lectura</span>
           </div>
-          <p style={{ fontSize: 13, color: 'var(--navy-500)', lineHeight: 1.6 }}>
-            En esta fase de prototipo los datos son locales. En la versión final, el sistema
-            conectará con <strong>MySQL</strong> a través de <strong>Sequelize ORM</strong> en el backend Node.js.
-          </p>
-        </div>
 
-        {/* Seguridad */}
-        <div className="card card-pad">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-            <div style={{
-              width: 36, height: 36, background: 'var(--purple-100)', borderRadius: 'var(--radius-md)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--purple-500)'
-            }}>
-              <Shield size={18} />
+          {/* Estado Técnico */}
+          <div className="card card-pad">
+            <h3 style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 20 }}>
+              Estado Técnico y DB
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green-500)', boxShadow: '0 0 10px var(--green-500)' }}></div>
+                  <div style={{ fontSize: 13.5, color: 'var(--text-primary)', fontWeight: 600 }}>Base de Datos Conectada</div>
+                </div>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>MySQL 8.0</span>
+              </div>
+              
+              <div style={{ 
+                padding: '16px', 
+                background: 'rgba(99, 102, 241, 0.05)', 
+                borderRadius: 'var(--radius-md)', 
+                border: '1px dashed var(--indigo-500)' 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Último Respaldo</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>Pendiente de primer respaldo</div>
+                  </div>
+                  <div style={{ color: 'var(--indigo-500)' }}>
+                    <RefreshCw size={18} />
+                  </div>
+                </div>
+                <button className="btn btn-primary btn-sm" style={{ width: '100%', justifyContent: 'center' }}>
+                   Forzar Sincronización
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 4 }}>
+                <span>Sesión actual expira en:</span>
+                <span style={{ fontWeight: 600, color: 'var(--indigo-500)' }}>04:12:35</span>
+              </div>
             </div>
-            <h3 style={{ fontWeight: 700, fontSize: 15, color: 'var(--navy-800)' }}>Seguridad</h3>
-            <span className="badge badge-green" style={{ marginLeft: 'auto' }}>JWT activo</span>
           </div>
-          <p style={{ fontSize: 13, color: 'var(--navy-500)', lineHeight: 1.6 }}>
-            Acceso protegido por autenticación JWT. Solo la Dirección del plantel tiene
-            acceso al sistema y al material académico almacenado.
-          </p>
+
+          {/* Desarrollo y Soporte (Alejandro Villa) */}
+          <div className="card card-pad" style={{ 
+            background: 'var(--bg-card-special)', 
+            border: '1px solid var(--indigo-500)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute', top: -10, right: -10, opacity: 0.05, transform: 'rotate(20deg)'
+            }}>
+              <Settings size={100} color="var(--indigo-500)" />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+              <div style={{
+                width: 36, height: 36, background: 'var(--indigo-500)', borderRadius: 'var(--radius-md)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
+              }}>
+                <User size={18} />
+              </div>
+              <h3 style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>Desarrollo y Soporte</h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <div className="detail-label">Desarrollador</div>
+                <div className="detail-value">Alejandro Villa</div>
+              </div>
+              <div>
+                <div className="detail-label">Contacto</div>
+                <div className="detail-value" style={{ color: 'var(--indigo-600)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Mail size={14} /> alejandrovilla2912@gmail.com
+                </div>
+              </div>
+              <a 
+                href="mailto:alejandrovilla2912@gmail.com" 
+                className="btn btn-primary" 
+                style={{ marginTop: 8, justifyContent: 'center', gap: 8 }}
+              >
+                Contactar Soporte <ExternalLink size={14} />
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

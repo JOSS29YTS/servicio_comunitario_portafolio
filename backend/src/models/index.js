@@ -10,6 +10,8 @@ const Estudiante       = require('./Estudiante')
 const ProyectoEstudiante = require('./ProyectoEstudiante')
 const ArchivoPdf       = require('./ArchivoPdf')
 const EnvioEmail       = require('./EnvioEmail')
+const Tutor            = require('./Tutor')
+const ProyectoTutor    = require('./ProyectoTutor')
 
 // ── ASOCIACIONES ──────────────────────────────────────────
 //
@@ -20,6 +22,7 @@ const EnvioEmail       = require('./EnvioEmail')
 //  Proyecto  1 ─────── N  ArchivoPdf
 //  Proyecto  1 ─────── N  EnvioEmail
 //  Proyecto  N ─────── M  Estudiante   (via ProyectoEstudiante)
+//  Proyecto  N ─────── M  Tutor        (via ProyectoTutor)
 
 // Promocion → Proyecto
 Promocion.hasMany(Proyecto, { foreignKey: 'id_promocion', as: 'proyectos' })
@@ -59,6 +62,20 @@ Estudiante.belongsToMany(Proyecto, {
   as:         'proyectos',
 })
 
+// Proyecto <──> Tutor  (N:M via tabla pivote)
+Proyecto.belongsToMany(Tutor, {
+  through:    ProyectoTutor,
+  foreignKey: 'id_proyecto',
+  otherKey:   'id_tutor',
+  as:         'tutores',
+})
+Tutor.belongsToMany(Proyecto, {
+  through:    ProyectoTutor,
+  foreignKey: 'id_tutor',
+  otherKey:   'id_proyecto',
+  as:         'proyectos',
+})
+
 // ── EXPORTAR ──────────────────────────────────────────────
 module.exports = {
   Usuario,
@@ -69,4 +86,6 @@ module.exports = {
   ProyectoEstudiante,
   ArchivoPdf,
   EnvioEmail,
+  Tutor,
+  ProyectoTutor,
 }

@@ -11,6 +11,14 @@ function getIniciales(nombreCompleto = '') {
   return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase()
 }
 
+// Función para poner en Capital Case (Nombre Apellido)
+function formatNombre(nombre = '') {
+  return nombre.toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null)
   const [loading, setLoading] = useState(true)  // mientras verifica el token guardado
@@ -23,7 +31,14 @@ export function AuthProvider({ children }) {
     if (token && usuario) {
       try {
         const parsed = JSON.parse(usuario)
-        setUser({ ...parsed, iniciales: getIniciales(parsed.nombre_completo) })
+        // Para el prototipo, si no tiene rol le ponemos Director por defecto
+        const role = parsed.rol || 'Director'
+        setUser({ 
+          ...parsed, 
+          nombre_completo: formatNombre(parsed.nombre_completo),
+          rol: role, 
+          iniciales: getIniciales(parsed.nombre_completo) 
+        })
       } catch {
         localStorage.removeItem('token')
         localStorage.removeItem('usuario')
@@ -40,9 +55,9 @@ export function AuthProvider({ children }) {
       if (data.ok) {
         const userData = {
           ...data.usuario,
+          rol: data.usuario.rol || 'Director', // Mock
           iniciales: getIniciales(data.usuario.nombre_completo),
-          // El nombre siempre en MAYÚSCULAS (tal como viene del backend)
-          nombre_completo: data.usuario.nombre_completo.toUpperCase(),
+          nombre_completo: formatNombre(data.usuario.nombre_completo),
         }
 
         // Guardar token y usuario en localStorage
@@ -71,8 +86,9 @@ export function AuthProvider({ children }) {
       if (data.ok) {
         const userData = {
           ...data.usuario,
+          rol: data.usuario.rol || 'Director', // Mock
           iniciales: getIniciales(data.usuario.nombre_completo),
-          nombre_completo: data.usuario.nombre_completo.toUpperCase(),
+          nombre_completo: formatNombre(data.usuario.nombre_completo),
         }
 
         localStorage.setItem('token',   data.token)

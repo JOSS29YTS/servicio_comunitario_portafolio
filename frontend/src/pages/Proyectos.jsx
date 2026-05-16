@@ -56,7 +56,7 @@ function DetalleModal({ proyecto, onClose }) {
           </div>
           <div>
             <div className="detail-label">Descripción del Proyecto</div>
-            <div className="detail-value" style={{ marginTop: 6, lineHeight: 1.7, color: 'var(--navy-700)' }}>
+            <div className="detail-value" style={{ marginTop: 6, lineHeight: 1.7, color: 'var(--text-secondary)' }}>
               {proyecto.descripcion}
             </div>
           </div>
@@ -68,7 +68,7 @@ function DetalleModal({ proyecto, onClose }) {
               Descargar PDF
             </button>
           ) : (
-            <span style={{ fontSize: 12.5, color: 'var(--navy-400)' }}>
+            <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
               <FileText size={13} style={{ display:'inline', marginRight: 4 }} />
               PDF no disponible
             </span>
@@ -111,7 +111,7 @@ export default function Proyectos() {
       </div>
 
       {/* Filtros */}
-      <div className="card card-pad" style={{ marginBottom: 24 }}>
+      <div className="card card-pad" style={{ marginBottom: 24, background: 'var(--bg-card-special)' }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="search-bar" style={{ flex: 1, minWidth: 240 }}>
             <Search size={16} className="search-icon" />
@@ -154,14 +154,14 @@ export default function Proyectos() {
       {/* Conteo */}
       <div style={{
         fontSize: 13,
-        color: 'var(--navy-500)',
+        color: 'var(--text-secondary)',
         marginBottom: 16,
         display: 'flex',
         alignItems: 'center',
         gap: 6,
       }}>
         <Filter size={14} />
-        Mostrando <strong style={{ color: 'var(--navy-800)' }}>{filtered.length}</strong> de {proyectos.length} proyectos
+        Mostrando <strong style={{ color: 'var(--text-primary)' }}>{filtered.length}</strong> de {proyectos.length} proyectos
       </div>
 
       {/* Tabla */}
@@ -194,15 +194,15 @@ export default function Proyectos() {
             <tbody>
               {filtered.map((p, idx) => (
                 <tr key={p.id} style={{ cursor: 'pointer' }} onClick={() => setDetalle(p)}>
-                  <td style={{ color: 'var(--navy-400)', fontWeight: 600, width: 36 }}>{idx+1}</td>
+                  <td style={{ color: 'var(--text-muted)', fontWeight: 600, width: 36 }}>{idx+1}</td>
                   <td>
-                    <div style={{ fontWeight: 600, color: 'var(--navy-800)', fontSize: 13.5, maxWidth: 320 }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13.5, maxWidth: 320 }}>
                       {p.nombre}
                     </div>
-                    <div style={{ fontSize: 11.5, color: 'var(--navy-400)', marginTop: 2 }}>{p.tema}</div>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>{p.tema}</div>
                   </td>
                   <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--navy-600)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12.5, color: 'var(--text-secondary)' }}>
                       <Users size={13} />
                       {p.estudiantes.length > 1
                         ? `${p.estudiantes[0]} +${p.estudiantes.length - 1}`

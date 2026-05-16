@@ -11,6 +11,8 @@ import Proyectos from './pages/Proyectos'
 import NuevoProyecto from './pages/NuevoProyecto'
 import Buscar from './pages/Buscar'
 import Configuracion from './pages/Configuracion'
+import Notificaciones from './pages/Notificaciones'
+import Usuarios from './pages/Usuarios'
 
 function AppLayout({ children }) {
   return (
@@ -85,6 +87,16 @@ function AppRoutes() {
           <AppLayout><Configuracion /></AppLayout>
         </ProtectedRoute>
       } />
+      <Route path="/notificaciones" element={
+        <ProtectedRoute>
+          <AppLayout><Notificaciones /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/usuarios" element={
+        <ProtectedRoute>
+          <AppLayout><Usuarios /></AppLayout>
+        </ProtectedRoute>
+      } />
 
       {/* Redirecciones */}
       <Route path="/" element={<Navigate to="/login" replace />} />
@@ -94,6 +106,12 @@ function AppRoutes() {
 }
 
 export default function App() {
+  React.useEffect(() => {
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark')
+    }
+  }, [])
+
   return (
     <AuthProvider>
       <BrowserRouter>

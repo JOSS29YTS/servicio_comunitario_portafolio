@@ -50,7 +50,7 @@ export default function Register() {
         <div className="login-header" style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 }}>
             <div className="login-logo" style={{ width: 40, height: 40, margin: 0 }}>
-              <BookOpen size={20} color="#fff" />
+              <img src="/logo_fatima.svg" alt="Colegio NSF" />
             </div>
             <div className="login-school-name" style={{ margin: 0, fontSize: 15, textAlign: 'left', lineHeight: 1.2 }}>
               Colegio Nuestra<br/>Señora de Fátima
