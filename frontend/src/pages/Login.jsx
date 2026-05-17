@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Eye, EyeOff, BookOpen, Lock, Mail, AlertCircle } from 'lucide-react'
+import { Eye, EyeOff, BookOpen, Lock, Mail, AlertCircle, ArrowLeft } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail]       = useState('')
@@ -156,6 +156,17 @@ export default function Login() {
             onClick={() => navigate('/registro')}
           >
             Regístrate aquí
+          </span>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 14, fontSize: 13 }}>
+          <span
+            style={{ color: 'var(--navy-400)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'color 0.2s' }}
+            onClick={() => navigate('/')}
+            className="login-back-home"
+          >
+            <ArrowLeft size={14} />
+            Volver al Inicio
           </span>
         </div>
 
