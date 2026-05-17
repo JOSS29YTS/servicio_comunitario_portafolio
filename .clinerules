@@ -27,6 +27,11 @@ Este archivo define las políticas de control y metodologías de trabajo que el 
 - **REGLA:** Queda estrictamente prohibido crear commits o realizar subidas a GitHub (`git commit`, `git push`) de forma automática tras cada edición de archivos.
 - **FLUJO:** El asistente solo debe interactuar con Git o GitHub cuando el usuario dé una instrucción directa y explícita para hacerlo (ej: *"sube a github"*, *"haz un commit"*). Se prefiere acumular múltiples mejoras de forma local antes de realizar un envío final.
 
+### 5. Uso Exclusivo de PNPM para Gestión de Dependencias
+- **REGLA:** Queda estrictamente prohibido utilizar `npm install` para instalar dependencias. Toda la gestión de paquetes, instalación y ejecución de scripts locales debe realizarse utilizando obligatoriamente **pnpm** (ej: `pnpm install`, `pnpm add`, etc.).
+- **EXCEPCIÓN:** Se permite el uso de herramientas específicas de análisis de seguridad como `npm audit` o `pnpm audit` para diagnosticar vulnerabilidades cuando sea necesario.
+- **MOTIVO:** Incrementar la seguridad, velocidad y eficiencia en el almacenamiento de dependencias al evitar el uso directo de los comandos de instalación tradicionales de npm.
+
 ---
 
 *Reglas establecidas y vigentes para todo el ciclo de desarrollo.*
