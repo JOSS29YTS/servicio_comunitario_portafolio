@@ -50,3 +50,12 @@ conectar la interfaz profesional con la lógica del servidor.
 
 ------------------------------------------------------------
 Documento creado por Alejandro Villa - 16/05/2026
+
+-------------------------------------------------------------
+
+Para el backend (siguientes 40 horas) lo lógico sería:
+
+Configuración del servidor Node.js + Express — estructura de carpetas, variables de entorno, conexión a MySQL con Sequelize. (~8 hrs)
+Módulo de autenticación Backend — endpoints de login/registro, generación de JWT, middleware de protección de rutas. (~10 hrs)
+Módulo de registro de proyectos + carga de PDFs — endpoints CRUD, integración de Multer para recibir y almacenar los archivos PDF. (~12 hrs)
+Módulo de búsqueda y filtrado — endpoints con filtros por año, categoría y estudiante, integración con el buscador del Frontend via Axios. (~10 hrs)
