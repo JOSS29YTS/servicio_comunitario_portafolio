@@ -14,7 +14,6 @@ const CAMPOS_VACIO = {
   tema:        '',
   descripcion: '',
   estudiantes: [''],
-  tutores:     [''],
   archivo:     null,
 }
 
@@ -104,16 +103,7 @@ export default function NuevoProyecto() {
     setForm(f => ({ ...f, estudiantes: arr.length ? arr : [''] }))
   }
 
-  const setTutor = (i, value) => {
-    const arr = [...form.tutores]
-    arr[i] = value
-    setForm(f => ({ ...f, tutores: arr }))
-  }
-  const addTutor = () => setForm(f => ({ ...f, tutores: [...f.tutores, ''] }))
-  const removeTutor = (i) => {
-    const arr = form.tutores.filter((_, idx) => idx !== i)
-    setForm(f => ({ ...f, tutores: arr.length ? arr : [''] }))
-  }
+
 
   const handleFile = (file) => {
     if (file && file.type === 'application/pdf') {
@@ -129,7 +119,6 @@ export default function NuevoProyecto() {
     if (!form.tema.trim())      e.tema        = 'El tema específico es requerido.'
     if (!form.descripcion.trim()) e.descripcion = 'La descripción es requerida.'
     if (form.estudiantes.every(s => !s.trim())) e.estudiantes = 'Agrega al menos un estudiante.'
-    if (form.tutores.every(s => !s.trim())) e.tutores = 'Agrega al menos un tutor.'
     return e
   }
 
@@ -360,61 +349,10 @@ export default function NuevoProyecto() {
           </button>
         </div>
 
-        {/* ── Sección 3: Tutores ── */}
+        {/* ── Sección 3: Descripción ── */}
         <div className="card card-pad" style={{ marginBottom: 20 }}>
           <div className="form-section-title">
             <span className="section-number">3</span>
-            Tutores
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {form.tutores.map((tut, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <div style={{ position: 'relative', flex: 1 }}>
-                  <User size={15} style={{
-                    position: 'absolute', left: 12, top: '50%',
-                    transform: 'translateY(-50%)', color: 'var(--navy-400)'
-                  }} />
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder={`Tutor ${i + 1}`}
-                    value={tut}
-                    onChange={e => setTutor(i, e.target.value)}
-                    style={{ paddingLeft: 36 }}
-                  />
-                </div>
-                {form.tutores.length > 1 && (
-                  <button
-                    type="button"
-                    className="btn btn-ghost btn-icon"
-                    onClick={() => removeTutor(i)}
-                    title="Eliminar"
-                  >
-                    <Trash2 size={15} color="var(--red-500)" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-          {errors.tutores && (
-            <span className="form-hint" style={{ color: 'var(--red-500)', marginTop: 8, display: 'block' }}>{errors.tutores}</span>
-          )}
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            style={{ marginTop: 12 }}
-            onClick={addTutor}
-          >
-            <Plus size={14} />
-            Agregar tutor
-          </button>
-        </div>
-
-        {/* ── Sección 4: Descripción ── */}
-        <div className="card card-pad" style={{ marginBottom: 20 }}>
-          <div className="form-section-title">
-            <span className="section-number">4</span>
             Descripción del Proyecto
           </div>
           <div className="form-group">
@@ -435,10 +373,10 @@ export default function NuevoProyecto() {
           </div>
         </div>
 
-        {/* ── Sección 5: PDF ── */}
+        {/* ── Sección 4: PDF ── */}
         <div className="card card-pad" style={{ marginBottom: 24 }}>
           <div className="form-section-title">
-            <span className="section-number">5</span>
+            <span className="section-number">4</span>
             Archivo del Proyecto (PDF)
           </div>
 

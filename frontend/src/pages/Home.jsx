@@ -113,7 +113,7 @@ export default function Home() {
               <Search size={24} />
             </div>
             <h3>Búsqueda Inteligente</h3>
-            <p>Encuentra proyectos de investigación en milisegundos con filtros avanzados por título, autor, año de publicación o tutor.</p>
+            <p>Encuentra proyectos de investigación en milisegundos con filtros avanzados por título, autor, categoría o año de publicación.</p>
           </div>
 
           {/* Tarjeta 2 */}

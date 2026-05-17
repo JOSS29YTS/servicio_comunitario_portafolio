@@ -10,7 +10,7 @@ const bcrypt   = require('bcryptjs')
 const jwt      = require('jsonwebtoken')
 const { body, validationResult } = require('express-validator')
 
-const { Usuario } = require('../models')
+const { Usuario, Rol } = require('../models')
 const authMiddleware = require('../middlewares/auth')
 
 const router = express.Router()
@@ -37,8 +37,11 @@ router.post(
     const { email, password } = req.body
 
     try {
-      // Buscar usuario por correo
-      const usuario = await Usuario.findOne({ where: { email } })
+      // Buscar usuario por correo incluyendo su Rol
+      const usuario = await Usuario.findOne({
+        where: { email },
+        include: [{ model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] }]
+      })
       if (!usuario) {
         return res.status(401).json({
           ok:      false,
@@ -77,6 +80,7 @@ router.post(
           id_usuario:      usuario.id_usuario,
           nombre_completo: usuario.nombre_completo,
           email:           usuario.email,
+          rol:             usuario.rol ? usuario.rol.nombre : null,
         },
       })
     } catch (error) {
@@ -113,10 +117,22 @@ router.post(
 
       const contrasena_hash = await bcrypt.hash(password, 10)
 
-      const usuario = await Usuario.create({
+      // Buscar el rol 'Profesor' para usar como fallback seguro
+      const rolProfesor = await Rol.findOne({ where: { nombre: 'Profesor' } })
+      const idRolFallback = rolProfesor ? rolProfesor.id_rol : 3
+
+      const id_rol = req.body.id_rol || idRolFallback
+
+      const usuarioCreado = await Usuario.create({
         nombre_completo,
         email,
         contrasena_hash,
+        id_rol,
+      })
+
+      // Obtener el usuario completo con la asociación del Rol
+      const usuario = await Usuario.findByPk(usuarioCreado.id_usuario, {
+        include: [{ model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] }]
       })
 
       const payload = {
@@ -137,6 +153,7 @@ router.post(
           id_usuario:      usuario.id_usuario,
           nombre_completo: usuario.nombre_completo,
           email:           usuario.email,
+          rol:             usuario.rol ? usuario.rol.nombre : null,
         },
       })
     } catch (error) {
@@ -152,6 +169,7 @@ router.get('/me', authMiddleware, async (req, res) => {
   try {
     const usuario = await Usuario.findByPk(req.usuario.id_usuario, {
       attributes: ['id_usuario', 'nombre_completo', 'email', 'creado_en', 'ultimo_acceso'],
+      include: [{ model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] }]
     })
 
     if (!usuario) {

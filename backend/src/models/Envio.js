@@ -1,12 +1,12 @@
 // ============================================================
-// MODELO: EnvioEmail
-// Tabla: envio_email
-// Descripción: Registro de correos enviados con PDFs de proyectos
+// MODELO: Envio
+// Tabla: envio
+// Descripción: Registro de envíos de correos de proyectos
 // ============================================================
 const { DataTypes } = require('sequelize')
 const { sequelize }  = require('../config/database')
 
-const EnvioEmail = sequelize.define('EnvioEmail', {
+const Envio = sequelize.define('Envio', {
   id_envio: {
     type:          DataTypes.INTEGER,
     primaryKey:    true,
@@ -24,17 +24,6 @@ const EnvioEmail = sequelize.define('EnvioEmail', {
     references: { model: 'usuario', key: 'id_usuario' },
     comment:    'Usuario (directora) que realizó el envío',
   },
-  destinatario_email: {
-    type:      DataTypes.STRING(200),
-    allowNull: false,
-    validate:  { isEmail: true },
-    comment:   'Correo del destinatario (docente o estudiante)',
-  },
-  destinatario_nombre: {
-    type:      DataTypes.STRING(150),
-    allowNull: true,
-    comment:   'Nombre del destinatario del correo',
-  },
   enviado_en: {
     type:         DataTypes.DATE,
     defaultValue: DataTypes.NOW,
@@ -43,11 +32,11 @@ const EnvioEmail = sequelize.define('EnvioEmail', {
   motivo: {
     type:      DataTypes.STRING(300),
     allowNull: true,
-    comment:   'Motivo o nota del envío (ej: solicitado por el docente Juan Pérez)',
+    comment:   'Motivo o nota del envío (ej: solicitado por docente)',
   },
 }, {
-  tableName:  'envio_email',
+  tableName:  'envio',
   timestamps: false,
 })
 
-module.exports = EnvioEmail
+module.exports = Envio

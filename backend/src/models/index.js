@@ -2,27 +2,32 @@
 // MODELOS — Índice central + Asociaciones
 // Registra todos los modelos y define las relaciones entre tablas
 // ============================================================
-const Usuario          = require('./Usuario')
-const Categoria        = require('./Categoria')
-const Promocion        = require('./Promocion')
-const Proyecto         = require('./Proyecto')
-const Estudiante       = require('./Estudiante')
+const Rol               = require('./Rol')
+const Usuario           = require('./Usuario')
+const Categoria         = require('./Categoria')
+const Promocion         = require('./Promocion')
+const Proyecto          = require('./Proyecto')
+const Estudiante        = require('./Estudiante')
 const ProyectoEstudiante = require('./ProyectoEstudiante')
-const ArchivoPdf       = require('./ArchivoPdf')
-const EnvioEmail       = require('./EnvioEmail')
-const Tutor            = require('./Tutor')
-const ProyectoTutor    = require('./ProyectoTutor')
+const ArchivoPdf        = require('./ArchivoPdf')
+const Envio             = require('./Envio')
+const DestinatarioEnvio = require('./DestinatarioEnvio')
 
 // ── ASOCIACIONES ──────────────────────────────────────────
 //
+//  Rol       1 ─────── N  Usuario            (tiene)
 //  Promocion 1 ─────── N  Proyecto
 //  Categoria 1 ─────── N  Proyecto
-//  Usuario   1 ─────── N  Proyecto     (registrado_por)
-//  Usuario   1 ─────── N  EnvioEmail   (realiza)
+//  Usuario   1 ─────── N  Proyecto           (registrado_por)
+//  Usuario   1 ─────── N  Envio              (realiza)
 //  Proyecto  1 ─────── N  ArchivoPdf
-//  Proyecto  1 ─────── N  EnvioEmail
-//  Proyecto  N ─────── M  Estudiante   (via ProyectoEstudiante)
-//  Proyecto  N ─────── M  Tutor        (via ProyectoTutor)
+//  Proyecto  1 ─────── N  Envio
+//  Envio     1 ─────── N  DestinatarioEnvio  (tiene)
+//  Proyecto  N ─────── M  Estudiante         (via ProyectoEstudiante)
+
+// Rol → Usuario (1:N)
+Rol.hasMany(Usuario, { foreignKey: 'id_rol', as: 'usuarios' })
+Usuario.belongsTo(Rol, { foreignKey: 'id_rol', as: 'rol' })
 
 // Promocion → Proyecto
 Promocion.hasMany(Proyecto, { foreignKey: 'id_promocion', as: 'proyectos' })
@@ -40,13 +45,17 @@ Proyecto.belongsTo(Usuario, { foreignKey: 'registrado_por', as: 'registrado_por_
 Proyecto.hasMany(ArchivoPdf, { foreignKey: 'id_proyecto', as: 'archivos' })
 ArchivoPdf.belongsTo(Proyecto, { foreignKey: 'id_proyecto', as: 'proyecto' })
 
-// Proyecto → EnvioEmail
-Proyecto.hasMany(EnvioEmail, { foreignKey: 'id_proyecto', as: 'envios' })
-EnvioEmail.belongsTo(Proyecto, { foreignKey: 'id_proyecto', as: 'proyecto' })
+// Proyecto → Envio
+Proyecto.hasMany(Envio, { foreignKey: 'id_proyecto', as: 'envios' })
+Envio.belongsTo(Proyecto, { foreignKey: 'id_proyecto', as: 'proyecto' })
 
-// Usuario → EnvioEmail (quien realizó el envío)
-Usuario.hasMany(EnvioEmail, { foreignKey: 'id_usuario', as: 'envios_realizados' })
-EnvioEmail.belongsTo(Usuario, { foreignKey: 'id_usuario', as: 'usuario' })
+// Usuario → Envio (quien realizó el envío)
+Usuario.hasMany(Envio, { foreignKey: 'id_usuario', as: 'envios_realizados' })
+Envio.belongsTo(Usuario, { foreignKey: 'id_usuario', as: 'usuario' })
+
+// Envio → DestinatarioEnvio (1:N — un envío puede tener múltiples destinatarios)
+Envio.hasMany(DestinatarioEnvio, { foreignKey: 'id_envio', as: 'destinatarios' })
+DestinatarioEnvio.belongsTo(Envio, { foreignKey: 'id_envio', as: 'envio' })
 
 // Proyecto <──> Estudiante  (N:M via tabla pivote)
 Proyecto.belongsToMany(Estudiante, {
@@ -62,22 +71,9 @@ Estudiante.belongsToMany(Proyecto, {
   as:         'proyectos',
 })
 
-// Proyecto <──> Tutor  (N:M via tabla pivote)
-Proyecto.belongsToMany(Tutor, {
-  through:    ProyectoTutor,
-  foreignKey: 'id_proyecto',
-  otherKey:   'id_tutor',
-  as:         'tutores',
-})
-Tutor.belongsToMany(Proyecto, {
-  through:    ProyectoTutor,
-  foreignKey: 'id_tutor',
-  otherKey:   'id_proyecto',
-  as:         'proyectos',
-})
-
 // ── EXPORTAR ──────────────────────────────────────────────
 module.exports = {
+  Rol,
   Usuario,
   Categoria,
   Promocion,
@@ -85,7 +81,6 @@ module.exports = {
   Estudiante,
   ProyectoEstudiante,
   ArchivoPdf,
-  EnvioEmail,
-  Tutor,
-  ProyectoTutor,
+  Envio,
+  DestinatarioEnvio,
 }

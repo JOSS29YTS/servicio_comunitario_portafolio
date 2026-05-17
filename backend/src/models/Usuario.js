@@ -13,6 +13,12 @@ const Usuario = sequelize.define('Usuario', {
     autoIncrement: true,
     comment:       'Identificador único del usuario',
   },
+  id_rol: {
+    type:       DataTypes.INTEGER,
+    allowNull:  false,
+    references: { model: 'rol', key: 'id_rol' },
+    comment:    'ID del rol asignado al usuario',
+  },
   nombre_completo: {
     type:      DataTypes.STRING(150),
     allowNull: false,

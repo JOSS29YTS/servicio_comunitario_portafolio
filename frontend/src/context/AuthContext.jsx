@@ -31,12 +31,11 @@ export function AuthProvider({ children }) {
     if (token && usuario) {
       try {
         const parsed = JSON.parse(usuario)
-        // Para el prototipo, si no tiene rol le ponemos Director por defecto
-        const role = parsed.rol || 'Director'
+        // Usar el rol real del usuario desde la base de datos
         setUser({ 
           ...parsed, 
           nombre_completo: formatNombre(parsed.nombre_completo),
-          rol: role, 
+          rol: parsed.rol, 
           iniciales: getIniciales(parsed.nombre_completo) 
         })
       } catch {
@@ -55,7 +54,7 @@ export function AuthProvider({ children }) {
       if (data.ok) {
         const userData = {
           ...data.usuario,
-          rol: data.usuario.rol || 'Director', // Mock
+          rol: data.usuario.rol, 
           iniciales: getIniciales(data.usuario.nombre_completo),
           nombre_completo: formatNombre(data.usuario.nombre_completo),
         }
@@ -86,7 +85,7 @@ export function AuthProvider({ children }) {
       if (data.ok) {
         const userData = {
           ...data.usuario,
-          rol: data.usuario.rol || 'Director', // Mock
+          rol: data.usuario.rol, 
           iniciales: getIniciales(data.usuario.nombre_completo),
           nombre_completo: formatNombre(data.usuario.nombre_completo),
         }
