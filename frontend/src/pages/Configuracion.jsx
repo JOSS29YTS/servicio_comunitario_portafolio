@@ -1,16 +1,25 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Settings, User, Database, Shield, Camera, 
   Key, Bell, Globe, Activity, HardDrive, 
   FileText, Users, Mail, ExternalLink, RefreshCw
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 
 export default function Configuracion() {
-  const { user } = useAuth()
+  const { user, actualizarUsuario } = useAuth()
   const [notifEnabled, setNotifEnabled] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [telefono, setTelefono] = useState('0412-0000000')
+  const [telefono, setTelefono] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  // Sincronizar el teléfono con los datos cargados del usuario
+  useEffect(() => {
+    if (user) {
+      setTelefono(user.telefono || '')
+    }
+  }, [user])
 
   const toggleNotifications = async () => {
     if (!notifEnabled) {
@@ -21,13 +30,55 @@ export default function Configuracion() {
         // Enviar notificación de prueba
         new Notification('¡Sistema Activado! 🔔', {
           body: 'Las notificaciones de escritorio para el Repositorio Académico están funcionando correctamente.',
-          icon: '/logo_fatima.svg' // Opcional: ruta al logo
+          icon: '/logo_fatima.svg'
         })
       } else {
         alert('Para activar las notificaciones, debes permitir el acceso en la configuración de tu navegador.')
       }
     } else {
       setNotifEnabled(false)
+    }
+  }
+
+  // Guardar cambios del perfil (teléfono)
+  const handleSaveProfile = async () => {
+    if (isEditing) {
+      setLoading(true)
+      try {
+        const { data } = await api.put('/auth/perfil', { telefono })
+        if (data.ok) {
+          actualizarUsuario({ telefono: data.usuario.telefono })
+          setIsEditing(false)
+        }
+      } catch (error) {
+        const mensaje = 
+          error.response?.data?.mensaje || 
+          error.response?.data?.errores?.[0] || 
+          'No se pudo actualizar el perfil.'
+        alert(mensaje)
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      setIsEditing(true)
+    }
+  }
+
+  // Formatear marca de tiempo de última conexión
+  const formatConexion = (fechaIso) => {
+    if (!fechaIso) return 'Hoy'
+    try {
+      const date = new Date(fechaIso)
+      return date.toLocaleString('es-VE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      })
+    } catch (e) {
+      return 'Hoy'
     }
   }
 
@@ -51,9 +102,10 @@ export default function Configuracion() {
               </div>
               <button 
                 className={`btn ${isEditing ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={handleSaveProfile}
+                disabled={loading}
               >
-                {isEditing ? 'Guardar' : 'Editar Perfil'}
+                {loading ? 'Guardando...' : (isEditing ? 'Guardar' : 'Editar Perfil')}
               </button>
             </div>
 
@@ -71,10 +123,19 @@ export default function Configuracion() {
                       className="form-input" 
                       value={telefono} 
                       onChange={e => setTelefono(e.target.value)}
+                      placeholder="Ej: 0412-1234567"
                       style={{ padding: '4px 8px', height: 'auto', fontSize: 13.5 }}
                     />
                   ) : (
-                    <div className="detail-value">{telefono}</div>
+                    <div 
+                      className="detail-value" 
+                      style={{ 
+                        color: user?.telefono ? 'var(--text-primary)' : 'var(--text-muted)',
+                        fontStyle: user?.telefono ? 'normal' : 'italic'
+                      }}
+                    >
+                      {user?.telefono || 'No registrado'}
+                    </div>
                   )}
                 </div>
               </div>
@@ -86,14 +147,16 @@ export default function Configuracion() {
                 </div>
                 <div>
                   <div className="detail-label">Último Acceso</div>
-                  <div className="detail-value" style={{ fontSize: 12.5 }}>Hoy, 10:45 AM</div>
+                  <div className="detail-value" style={{ fontSize: 12.5 }}>
+                    {user?.ultima_conexion ? formatConexion(user.ultima_conexion) : 'Hoy'}
+                  </div>
                 </div>
               </div>
 
               <div>
                 <div className="detail-label">Rol / Cargo</div>
                 <div className="detail-value">
-                  <span className="badge badge-indigo">Director</span>
+                  <span className="badge badge-indigo">{user?.rol || 'Director'}</span>
                 </div>
               </div>
             </div>
@@ -201,7 +264,7 @@ export default function Configuracion() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: 'var(--text-secondary)', marginTop: 4 }}>
                 <span>Sesión actual expira en:</span>
-                <span style={{ fontWeight: 600, color: 'var(--indigo-500)' }}>04:12:35</span>
+                <span style={{ fontWeight: 600, color: 'var(--indigo-500)' }}>08:00:00</span>
               </div>
             </div>
           </div>

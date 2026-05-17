@@ -114,12 +114,33 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  // ── ACTUALIZAR USUARIO EN CACHE Y ESTADO ──────────────────
+  const actualizarUsuario = (nuevosDatos) => {
+    const usuarioActual = localStorage.getItem('usuario')
+    if (usuarioActual) {
+      try {
+        const parsed = JSON.parse(usuarioActual)
+        const actualizado = {
+          ...parsed,
+          ...nuevosDatos,
+          nombre_completo: formatNombre(nuevosDatos.nombre_completo || parsed.nombre_completo),
+          iniciales: getIniciales(nuevosDatos.nombre_completo || parsed.nombre_completo),
+        }
+        localStorage.setItem('usuario', JSON.stringify(actualizado))
+        setUser(actualizado)
+      } catch (err) {
+        console.error('Error al actualizar usuario en context:', err)
+      }
+    }
+  }
+
   return (
     <AuthContext.Provider value={{
       user,
       login,
       register,
       logout,
+      actualizarUsuario,
       loading,
       isAuthenticated: !!user,
     }}>
