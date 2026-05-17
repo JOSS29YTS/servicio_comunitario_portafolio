@@ -4,3 +4,12 @@ node_modules/
 dist/
 build/
 uploads/
+
+# Documentos personales y reportes (Seguridad y Privacidad)
+*.docx
+*.xlsx
+*.pptx
+*.pdf
+*.doc
+*.xls
+*.ppt
