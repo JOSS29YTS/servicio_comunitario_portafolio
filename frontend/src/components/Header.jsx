@@ -14,11 +14,15 @@ const PAGE_TITLES = {
 }
 
 function formatDate(date) {
-  return date.toLocaleDateString('es-VE', {
+  return date.toLocaleString('es-VE', {
     weekday: 'long',
-    year: 'numeric',
-    month: 'long',
     day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
   })
 }
 
@@ -27,7 +31,18 @@ export default function Header() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const page = PAGE_TITLES[location.pathname] || { title: 'Sistema', sub: '' }
-  const today = formatDate(new Date())
+  
+  // Reloj dinámico en tiempo real
+  const [currentTime, setCurrentTime] = React.useState(new Date())
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const today = formatDate(currentTime)
 
   // Capitalize first letter
   const todayCap = today.charAt(0).toUpperCase() + today.slice(1)
