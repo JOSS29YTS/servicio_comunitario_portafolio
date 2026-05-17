@@ -1,9 +1,25 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Shield, Search, FileText, ArrowRight, UserCheck, HelpCircle } from 'lucide-react'
+import { BookOpen, Shield, Search, FileText, ArrowRight, UserCheck, HelpCircle, Sun, Moon } from 'lucide-react'
 
 export default function Home() {
   const navigate = useNavigate()
+  const [logoError, setLogoError] = React.useState(false)
+  const [isDark, setIsDark]       = React.useState(
+    document.documentElement.classList.contains('dark')
+  )
+
+  const toggleTheme = () => {
+    const nextDark = !isDark
+    setIsDark(nextDark)
+    if (nextDark) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }
 
   const handleScrollToFeatures = () => {
     const element = document.getElementById('features-section')
@@ -14,17 +30,26 @@ export default function Home() {
 
   return (
     <div className="home-container">
-      {/* Retículas y luces decorativas de fondo */}
-      <div className="home-bg-grid" />
-      <div className="home-bg-glow-1" />
-      <div className="home-bg-glow-2" />
+      {/* Contenedor de fondos y luces para recortar el desbordamiento vertical */}
+      <div className="home-bg-wrapper">
+        <div className="home-bg-grid" />
+        <div className="home-bg-glow-1" />
+        <div className="home-bg-glow-2" />
+      </div>
 
       {/* Barra de Navegación Flotante */}
       <nav className="home-navbar">
         <div className="home-nav-brand">
           <div className="home-nav-logo">
-            <img src="/logo_fatima.svg" alt="Colegio NSF" onError={(e) => { e.target.style.display = 'none' }} />
-            <BookOpen className="fallback-logo-icon" size={24} />
+            {!logoError ? (
+              <img 
+                src="/logo_fatima.svg" 
+                alt="Colegio NSF" 
+                onError={() => setLogoError(true)} 
+              />
+            ) : (
+              <BookOpen className="fallback-logo-icon" size={24} />
+            )}
           </div>
           <div className="home-nav-brand-text">
             <span className="school-title">Colegio NSF</span>
@@ -33,6 +58,14 @@ export default function Home() {
         </div>
 
         <div className="home-nav-actions">
+          <button
+            title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            onClick={toggleTheme}
+            className="btn-nav-secondary"
+            style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+          >
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
           <a href="mailto:soporte@colegiofatima.edu.ve" className="btn-nav-secondary">
             <HelpCircle size={15} />
             Soporte Técnico
@@ -46,18 +79,13 @@ export default function Home() {
 
       {/* Sección Hero */}
       <header className="home-hero">
-        <div className="hero-badge">
-          <UserCheck size={12} />
-          <span>Servicio Comunitario — USM</span>
-        </div>
-        
         <h1 className="hero-title">
           Repositorio Académico <br />
           <span className="hero-title-gradient">Digital e Institucional</span>
         </h1>
         
         <p className="hero-subtitle">
-          Digitalizando la gestión de actas y expedientes escolares para un mañana más eficiente, seguro y libre de papeleo.
+          Digitalizando la gestión, registro y consulta de proyectos de investigación estudiantil para un mañana más eficiente, organizado y libre de papeleo.
         </p>
 
         <div className="hero-cta-group">
@@ -75,7 +103,7 @@ export default function Home() {
       <section id="features-section" className="home-features">
         <div className="section-header">
           <h2 className="section-title">¿Qué ofrece la plataforma?</h2>
-          <p className="section-subtitle">Diseñada para simplificar y agilizar el trabajo administrativo del plantel escolar.</p>
+          <p className="section-subtitle">Diseñada para simplificar el registro, la consulta y la preservación del repositorio de proyectos de investigación estudiantil.</p>
         </div>
 
         <div className="features-grid">
@@ -85,7 +113,7 @@ export default function Home() {
               <Search size={24} />
             </div>
             <h3>Búsqueda Inteligente</h3>
-            <p>Encuentra expedientes y actas académicas en milisegundos con filtros avanzados por año, nombre o número de cédula.</p>
+            <p>Encuentra proyectos de investigación en milisegundos con filtros avanzados por título, autor, año de publicación o tutor.</p>
           </div>
 
           {/* Tarjeta 2 */}
@@ -103,7 +131,7 @@ export default function Home() {
               <FileText size={24} />
             </div>
             <h3>Digitalización Eficiente</h3>
-            <p>Archiva expedientes y actas en formato PDF de alta resolución, reduciendo el espacio físico y el riesgo de deterioro del papel.</p>
+            <p>Archiva trabajos académicos y propuestas en formato PDF de alta resolución, reduciendo el espacio físico y preservando el conocimiento.</p>
           </div>
         </div>
       </section>

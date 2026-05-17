@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Trash2, FileText, CheckCircle,
   User, Upload, ChevronRight
 } from 'lucide-react'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 const CAMPOS_VACIO = {
   nombre:      '',
@@ -20,15 +21,72 @@ const CAMPOS_VACIO = {
 export default function NuevoProyecto() {
   const navigate  = useNavigate()
   const fileRef   = useRef()
+  const { user }  = useAuth()
+  
   const [form, setForm]         = useState(CAMPOS_VACIO)
   const [dragOver, setDragOver] = useState(false)
   const [errors, setErrors]     = useState({})
   const [success, setSuccess]   = useState(false)
   const [saving, setSaving]     = useState(false)
 
-  // Estados vacíos listos para conectarse al backend
-  const [categoriasLista] = useState([])
-  const [aniosDisponibles] = useState([])
+  // Estados vacíos cargados dinámicamente desde el backend
+  const [categoriasLista, setCategoriasLista] = useState([])
+  const [aniosDisponibles] = useState([2026, 2025, 2024, 2023])
+  
+  const [bocetoUrl, setBocetoUrl] = useState(null)
+  const [uploadingBoceto, setUploadingBoceto] = useState(false)
+
+  // Cargar estado inicial del boceto y las categorías al montar el componente
+  useEffect(() => {
+    const cargarDatosIniciales = async () => {
+      try {
+        // Cargar boceto
+        const resBoceto = await api.get('/boceto')
+        if (resBoceto.data?.ok && resBoceto.data?.existe) {
+          setBocetoUrl(resBoceto.data.url)
+        }
+
+        // Cargar categorías reales desde el backend
+        const resCat = await api.get('/categorias')
+        if (resCat.data?.ok) {
+          setCategoriasLista(resCat.data.categorias || [])
+        }
+      } catch (err) {
+        console.error('Error al cargar datos iniciales:', err)
+      }
+    }
+    cargarDatosIniciales()
+  }, [])
+
+  // Subir/Actualizar boceto PDF en Base64
+  const handleBocetoUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    
+    if (file.type !== 'application/pdf') {
+      alert('Por favor, selecciona un archivo PDF válido.')
+      return
+    }
+
+    setUploadingBoceto(true)
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onloadend = async () => {
+      try {
+        const base64Data = reader.result
+        const res = await api.post('/boceto', { fileData: base64Data })
+        if (res.data?.ok) {
+          setBocetoUrl(res.data.url)
+          alert('¡Boceto del Proyecto de Investigación actualizado con éxito! 📄')
+        }
+      } catch (err) {
+        console.error('Error al subir boceto:', err)
+        alert('Hubo un error al subir el boceto. Por favor intenta nuevamente.')
+      } finally {
+        setUploadingBoceto(false)
+      }
+    }
+  }
 
   const set = (field, value) => {
     setForm(f => ({ ...f, [field]: value }))
@@ -180,25 +238,74 @@ export default function NuevoProyecto() {
             </div>
           </div>
 
-          <div className="form-group">
+          <div className="form-group" style={{ marginBottom: 20 }}>
             <label className="form-label">Categoría <span>*</span></label>
-            <div className="category-pills" style={{ marginTop: 4 }}>
-              {categoriasLista.length === 0 ? (
-                <span style={{ fontSize: 13, color: 'var(--navy-400)' }}>Cargando categorías...</span>
-              ) : categoriasLista.map(cat => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  className={`category-pill ${form.categoria === cat.nombre ? 'selected' : ''}`}
-                  onClick={() => set('categoria', cat.nombre)}
-                >
-                  {cat.emoji} {cat.nombre}
-                </button>
+            <select
+              id="campo-categoria"
+              className="form-select"
+              value={form.categoria}
+              onChange={e => set('categoria', e.target.value)}
+              style={errors.categoria ? { borderColor: 'var(--red-500)' } : {}}
+            >
+              <option value="">Seleccionar categoría...</option>
+              {categoriasLista.map(cat => (
+                <option key={cat.id_categoria || cat.id} value={cat.nombre}>
+                  {cat.nombre}
+                </option>
               ))}
+            </select>
+            {errors.categoria && <span className="form-hint" style={{ color: 'var(--red-500)' }}>{errors.categoria}</span>}
+          </div>
+
+          {/* Fila del Voceto de Investigación */}
+          <div className="form-group" style={{ 
+            marginTop: 20, 
+            padding: '16px 20px', 
+            background: 'rgba(99, 102, 241, 0.03)', 
+            borderRadius: 'var(--radius-md)', 
+            border: '1px dashed var(--indigo-200)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <h4 style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Voceto del Proyecto (Pautas y Reglas)</h4>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>Lineamientos oficiales establecidos por la dirección escolar para la elaboración del proyecto.</p>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {bocetoUrl ? (
+                  <a 
+                    href={`http://localhost:3001${bocetoUrl}`} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="btn btn-secondary btn-sm"
+                    style={{ gap: 6, padding: '6px 14px', fontSize: 12.5, display: 'inline-flex', alignItems: 'center' }}
+                  >
+                    <FileText size={14} /> Descargar Voceto (Reglas)
+                  </a>
+                ) : (
+                  <span style={{ fontSize: 12.5, color: 'var(--navy-400)', fontStyle: 'italic' }}>Sin voceto cargado</span>
+                )}
+
+                {(user?.rol === 'Director' || user?.rol === 'Subdirector') && (
+                  <label 
+                    className={`btn btn-primary btn-sm ${uploadingBoceto ? 'disabled' : ''}`} 
+                    style={{ gap: 6, padding: '6px 14px', fontSize: 12.5, cursor: 'pointer', margin: 0, display: 'inline-flex', alignItems: 'center' }}
+                  >
+                    <Upload size={14} /> {uploadingBoceto ? 'Subiendo...' : (bocetoUrl ? 'Actualizar' : 'Subir Voceto')}
+                    <input 
+                      type="file" 
+                      accept="application/pdf" 
+                      style={{ display: 'none' }} 
+                      onChange={handleBocetoUpload} 
+                      disabled={uploadingBoceto}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
-            {errors.categoria && (
-              <span className="form-hint" style={{ color: 'var(--red-500)', marginTop: 6 }}>{errors.categoria}</span>
-            )}
           </div>
         </div>
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Eye, EyeOff, BookOpen, Lock, Mail, AlertCircle, User, ArrowLeft } from 'lucide-react'
+import { Eye, EyeOff, BookOpen, Lock, Mail, AlertCircle, User, ArrowLeft, Sun, Moon } from 'lucide-react'
 
 export default function Register() {
   const [nombre, setNombre]           = useState('')
@@ -11,6 +11,22 @@ export default function Register() {
   const [showPwd, setShowPwd]         = useState(false)
   const [error, setError]             = useState('')
   const [loading, setLoading]         = useState(false)
+
+  const [isDark, setIsDark] = useState(
+    document.documentElement.classList.contains('dark')
+  )
+
+  const toggleTheme = () => {
+    const nextDark = !isDark
+    setIsDark(nextDark)
+    if (nextDark) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }
 
   const { register } = useAuth()
   const navigate  = useNavigate()
@@ -45,6 +61,16 @@ export default function Register() {
     <div className="login-page">
       <div className="login-bg-grid" />
       <div className="login-bg-glow" />
+
+      {/* Botón flotante para cambiar de tema */}
+      <button
+        className="btn-theme-toggle-floating"
+        title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+        onClick={toggleTheme}
+        type="button"
+      >
+        {isDark ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
 
       <div className="login-card">
         <div className="login-header" style={{ marginBottom: 24 }}>
@@ -166,10 +192,10 @@ export default function Register() {
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'var(--navy-400)' }}>
+        <div className="login-register-prompt">
           ¿Ya tienes cuenta?{' '}
           <span
-            style={{ color: 'var(--indigo-400)', cursor: 'pointer', fontWeight: 600 }}
+            className="login-register-link"
             onClick={() => navigate('/login')}
           >
             Inicia sesión aquí

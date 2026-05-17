@@ -80,13 +80,21 @@
 
 html, body {
   font-family: var(--font-family);
-  background-color: var(--navy-100);
+  background-color: var(--navy-50) !important;
   color: var(--navy-900);
   line-height: 1.5;
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+}
+
+html.dark,
+html.dark body,
+:root.dark,
+:root.dark body {
+  background-color: var(--navy-950) !important;
+  color: var(--white) !important;
 }
 
 #root {
@@ -1150,6 +1158,121 @@ tr:hover td {
 }
 
 /* ============================================
+   SOBREESCRITURAS DE TEMA CLARO PARA LOGIN / REGISTRO
+   ============================================ */
+
+:root:not(.dark) .login-page {
+  background: linear-gradient(135deg, var(--navy-50) 0%, var(--indigo-100) 100%);
+}
+
+:root:not(.dark) .login-bg-grid {
+  background-image:
+    linear-gradient(rgba(79,70,229,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,70,229,0.06) 1px, transparent 1px);
+}
+
+:root:not(.dark) .login-bg-glow {
+  background: radial-gradient(circle, rgba(79,70,229,0.08) 0%, transparent 70%);
+}
+
+:root:not(.dark) .login-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--navy-200);
+  box-shadow: 0 20px 40px rgba(79, 70, 229, 0.08);
+}
+
+:root:not(.dark) .login-logo img {
+  filter: none; /* Muestra el logo original a color */
+}
+
+:root:not(.dark) .login-school-name {
+  color: var(--navy-900);
+}
+
+:root:not(.dark) .login-system-name {
+  color: var(--navy-500);
+}
+
+:root:not(.dark) .login-title {
+  color: var(--navy-900);
+}
+
+:root:not(.dark) .login-subtitle {
+  color: var(--navy-500);
+}
+
+:root:not(.dark) .login-divider {
+  border-top: 1px solid var(--navy-200);
+}
+
+:root:not(.dark) .login-form .form-label {
+  color: var(--navy-700);
+}
+
+:root:not(.dark) .login-form .form-input {
+  background: var(--white);
+  border-color: var(--navy-200);
+  color: var(--navy-900);
+}
+
+:root:not(.dark) .login-form .form-input::placeholder {
+  color: var(--navy-400);
+}
+
+:root:not(.dark) .login-form .form-input:focus {
+  background: var(--white);
+  border-color: var(--indigo-500);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+:root:not(.dark) .login-footer {
+  color: var(--navy-500);
+}
+
+:root:not(.dark) .login-card::-webkit-scrollbar-thumb {
+  background: var(--navy-200);
+}
+
+:root:not(.dark) .login-back-home {
+  color: var(--navy-600) !important;
+}
+
+:root:not(.dark) .login-back-home:hover {
+  color: var(--indigo-600) !important;
+}
+
+.login-register-prompt {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--navy-400);
+}
+
+:root:not(.dark) .login-register-prompt {
+  color: var(--navy-600);
+}
+
+.login-register-link {
+  color: var(--indigo-400);
+  cursor: pointer;
+  font-weight: 600;
+  transition: color var(--transition-fast);
+}
+
+.login-register-link:hover {
+  color: var(--indigo-300);
+}
+
+:root:not(.dark) .login-register-link {
+  color: var(--indigo-600);
+}
+
+:root:not(.dark) .login-register-link:hover {
+  color: var(--indigo-700);
+}
+
+/* ============================================
    EMPTY STATE
    ============================================ */
 
@@ -1783,7 +1906,7 @@ input:checked + .slider:before {
 .home-container {
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
+  overflow-x: clip;
   background-color: var(--navy-50);
   color: var(--navy-900);
   font-family: var(--font-family);
@@ -1795,6 +1918,14 @@ input:checked + .slider:before {
 :root.dark .home-container {
   background-color: var(--navy-950);
   color: var(--white);
+}
+
+.home-bg-wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .home-bg-grid {
@@ -1848,16 +1979,18 @@ input:checked + .slider:before {
   justify-content: space-between;
   align-items: center;
   padding: 16px 48px;
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--navy-200);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
   z-index: 1000;
   transition: all var(--transition-normal);
 }
 
 :root.dark .home-navbar {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.92);
   border-bottom-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
 }
 
 .home-nav-brand {
@@ -1869,23 +2002,29 @@ input:checked + .slider:before {
 .home-nav-logo {
   width: 40px;
   height: 40px;
-  background: var(--indigo-600);
-  color: var(--white);
-  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+  flex-shrink: 0;
   overflow: hidden;
 }
 
 .home-nav-logo img {
-  width: 80%;
-  height: 80%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  transition: filter var(--transition-normal);
+}
+
+:root.dark .home-nav-logo img {
+  filter: brightness(0) invert(1);
 }
 
 .fallback-logo-icon {
+  color: var(--navy-600);
+}
+
+:root.dark .fallback-logo-icon {
   color: var(--white);
 }
 
@@ -1986,7 +2125,7 @@ input:checked + .slider:before {
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 100px 24px 80px;
+  padding: 140px 24px 80px;
   max-width: 900px;
   margin: 0 auto;
 }
@@ -2019,6 +2158,11 @@ input:checked + .slider:before {
   color: var(--navy-900);
   line-height: 1.2;
   letter-spacing: -0.02em;
+  
+  /* Solución al Bug de Chrome GPU Paint */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 :root.dark .hero-title {
@@ -2030,12 +2174,22 @@ input:checked + .slider:before {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
+  
+  /* Solución al Bug de Chrome GPU Paint */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 :root.dark .hero-title-gradient {
   background: linear-gradient(135deg, var(--indigo-400), var(--purple-400));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  
+  /* Solución al Bug de Chrome GPU Paint */
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 
 .hero-subtitle {
@@ -2079,6 +2233,7 @@ input:checked + .slider:before {
   border-bottom: 1px solid var(--navy-200);
   backdrop-filter: blur(12px);
   transition: all var(--transition-normal);
+  scroll-margin-top: 80px;
 }
 
 :root.dark .home-features {
@@ -2200,6 +2355,7 @@ input:checked + .slider:before {
   background: var(--white);
   border-top: 1px solid var(--navy-200);
   transition: all var(--transition-normal);
+  margin-top: auto;
 }
 
 :root.dark .home-footer-sec {
@@ -2284,5 +2440,55 @@ input:checked + .slider:before {
     flex-direction: column;
     text-align: center;
     align-items: center;
+  }
+}
+
+/* Botón flotante para cambiar de tema (Login / Registro) */
+.btn-theme-toggle-floating {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--navy-200);
+  color: var(--navy-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+:root.dark .btn-theme-toggle-floating {
+  background: rgba(30, 41, 59, 0.4);
+  border-color: rgba(255, 255, 255, 0.06);
+  color: var(--navy-300);
+  box-shadow: none;
+}
+
+.btn-theme-toggle-floating:hover {
+  background: var(--navy-100);
+  color: var(--indigo-600);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+:root.dark .btn-theme-toggle-floating:hover {
+  background: var(--navy-800);
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 768px) {
+  .btn-theme-toggle-floating {
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
   }
 }
