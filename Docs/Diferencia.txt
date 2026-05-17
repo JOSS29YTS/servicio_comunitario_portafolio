@@ -1,0 +1,40 @@
+========================================================================
+DIFERENCIA ENTRE ARCHIVOS DE CONFIGURACIÓN Y DOCUMENTACIÓN
+========================================================================
+
+Este archivo explica detalladamente el propósito, la inyección en el sistema
+y el alcance de cada uno de los archivos utilizados en tu proyecto.
+
+------------------------------------------------------------------------
+1. .clinerules / .cursorrules
+------------------------------------------------------------------------
+* UBICACIÓN: Raíz del proyecto (obligatorio).
+* INYECCIÓN: 100% Automática e invisible. El propio editor (VS Code con
+             la extensión Cline/Roo Code, o Cursor IDE) lee este archivo 
+             y concatena su contenido al inicio de cada mensaje que envías.
+* PROPÓSITO: Reglas de comportamiento técnico y restricciones en caliente:
+  - Control de herramientas (ej: "No uses el navegador", "No hagas git push").
+  - Estilo de código estricto (ej: "Solo Vanilla CSS", "Comenta en español").
+  - Metodología (ej: "Crea siempre un plan antes de programar").
+* PÚBLICO: Exclusivo para la Inteligencia Artificial (es su manual de conducta).
+
+------------------------------------------------------------------------
+2. agente.md
+------------------------------------------------------------------------
+* UBICACIÓN: Carpeta de documentación (ej. Docs/agente.md o raíz).
+* INYECCIÓN: Manual o proactiva. Se lee cuando tú me dices "lee agente.md"
+             o cuando yo exploro tus carpetas al iniciar sesión de trabajo.
+* PROPÓSITO: Especificaciones técnicas del software y memoria del proyecto:
+  - Diagramas de base de datos (relaciones, nombres de columnas, claves).
+  - Listado de endpoints activos (ej. /login, /perfil, /proyectos).
+  - Lógica funcional y reglas de negocio del sistema escolar.
+  - Historial de decisiones de diseño para futuros desarrolladores.
+* PÚBLICO: Para humanos (tú) e Inteligencias Artificiales por igual (es 
+           el plano arquitectónico del sistema).
+
+========================================================================
+RESUMEN RÁPIDO:
+- .clinerules/.cursorrules le dicen a la IA CÓMO DEBE COMPORTARSE y qué
+  herramientas tiene permitido usar.
+- agente.md le dice a la IA y a ti CÓMO FUNCIONA EL SISTEMA técnicamente.
+========================================================================

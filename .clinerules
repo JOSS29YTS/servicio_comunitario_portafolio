@@ -1,0 +1,32 @@
+# Reglas de Comportamiento y Desarrollo - Repositorio Académico
+
+Este archivo define las políticas de control y metodologías de trabajo que el asistente de IA debe seguir de forma estrictamente obligatoria en cada turno.
+
+---
+
+### 1. Restricción de Pruebas en el Navegador
+- **REGLA:** Queda terminantemente prohibido iniciar, abrir o ejecutar pruebas automáticas en el navegador (herramienta `browser_subagent`) a menos que el usuario lo solicite de forma explícita en su instrucción.
+- **MOTIVO:** Minimizar ejecuciones innecesarias y optimizar la velocidad de respuesta, limitando las pruebas visuales únicamente a los casos requeridos por el usuario.
+
+---
+
+### 2. Protocolo de Planificación Obligatoria (Sugerencias y Mejoras)
+- **REGLA:** Ante cualquier idea, duda, sugerencia o propuesta de mejora planteada por el usuario, el asistente **DEBE elaborar y presentar un plan técnico de diseño estructurado** (`implementation_plan.md`) antes de realizar cualquier modificación al código.
+- **EXCEPCIÓN:** Esta regla de planeación obligatoria solo se omitirá cuando el usuario dé una instrucción de acción directa, imperativa y explícita (ej: *"haz esto"*, *"corrige esto de inmediato"*, *"implementa el plan ya"*).
+- **MOTIVO:** Mantener un control y trazabilidad absolutos sobre la arquitectura del proyecto, evitando cambios de código apresurados.
+
+---
+
+### 3. Análisis de Errores Autónomo (Diagnóstico Local)
+- **REGLA:** Cuando el usuario solicite un análisis (ej: *"analiza este error"*, *"revisa por qué falla esto"*) sin adjuntar o especificar un archivo de código concreto, el asistente debe realizar la búsqueda y el diagnóstico **de forma 100% autónoma en el sistema de archivos local** (usando `grep_search`, `list_dir` y `view_file`). 
+- **PROHIBICIÓN:** Bajo ninguna circunstancia se debe abrir o inspeccionar el navegador automatizado para diagnosticar errores de este tipo; toda la investigación debe realizarse leyendo y rastreando directamente el código fuente.
+
+---
+
+### 4. Restricción de Subida a GitHub (Git Push)
+- **REGLA:** Queda estrictamente prohibido crear commits o realizar subidas a GitHub (`git commit`, `git push`) de forma automática tras cada edición de archivos.
+- **FLUJO:** El asistente solo debe interactuar con Git o GitHub cuando el usuario dé una instrucción directa y explícita para hacerlo (ej: *"sube a github"*, *"haz un commit"*). Se prefiere acumular múltiples mejoras de forma local antes de realizar un envío final.
+
+---
+
+*Reglas establecidas y vigentes para todo el ciclo de desarrollo.*
