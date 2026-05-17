@@ -5,7 +5,7 @@
 require('dotenv').config()
 const bcrypt = require('bcryptjs')
 const { sequelize, testConnection } = require('./database')
-const { Usuario, Rol, Estado } = require('../models')
+const { Usuario, Rol, Estado, Categoria } = require('../models')
 
 async function seed() {
   await testConnection()
@@ -35,6 +35,34 @@ async function seed() {
       console.log(`  ✔ Rol '${nombreRol}' creado exitosamente (ID: ${rolInst.id_rol})`)
     } else {
       console.log(`  • Rol '${nombreRol}' ya existía en el sistema.`)
+    }
+  }
+
+  console.log('\n\x1b[33m⟳\x1b[0m  Insertando categorías temáticas predeterminadas...\n')
+  const categoriasPredeterminadas = [
+    { nombre: 'Salud y bienestar', descripcion: 'Nutrición, salud mental, adicciones, sexualidad, enfermedades' },
+    { nombre: 'Medio ambiente y ecología', descripcion: 'Contaminación, reciclaje, cambio climático, biodiversidad' },
+    { nombre: 'Tecnología e innovación', descripcion: 'Redes sociales, inteligencia artificial, impacto digital' },
+    { nombre: 'Sociedad y cultura', descripcion: 'Identidad, género, familia, migración, tradiciones' },
+    { nombre: 'Educación', descripcion: 'Métodos de aprendizaje, deserción escolar, inclusión' },
+    { nombre: 'Economía y emprendimiento', descripcion: 'Microempresas, finanzas personales, mercado laboral' },
+    { nombre: 'Valores y ciudadanía', descripcion: 'Corrupción, derechos humanos, participación comunitaria' },
+    { nombre: 'Ciencia y experimentación', descripcion: 'Proyectos con hipótesis, laboratorio, fenómenos naturales' },
+    { nombre: 'Arte y comunicación', descripcion: 'Medios, expresión artística, patrimonio cultural' },
+    { nombre: 'Deporte y recreación', descripcion: 'Actividad física, rendimiento, hábitos deportivos' },
+    { nombre: 'Historia y patrimonio', descripcion: 'Historia local, memoria colectiva, identidad nacional' }
+  ]
+
+  for (const cat of categoriasPredeterminadas) {
+    const [catInst, creadoCat] = await Categoria.findOrCreate({
+      where: { nombre: cat.nombre },
+      defaults: { descripcion: cat.descripcion }
+    })
+    if (creadoCat) {
+      console.log(`  ✔ Categoría '${cat.nombre}' creada exitosamente.`)
+    } else {
+      await catInst.update({ descripcion: cat.descripcion })
+      console.log(`  • Categoría '${cat.nombre}' ya existía (descripción actualizada).`)
     }
   }
 
