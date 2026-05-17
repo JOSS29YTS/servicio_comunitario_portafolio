@@ -5,10 +5,24 @@
 require('dotenv').config()
 const bcrypt = require('bcryptjs')
 const { sequelize, testConnection } = require('./database')
-const { Usuario, Rol } = require('../models')
+const { Usuario, Rol, Estado } = require('../models')
 
 async function seed() {
   await testConnection()
+
+  console.log('\n\x1b[33m⟳\x1b[0m  Insertando estados de cuenta predeterminados...\n')
+  const estadosPredeterminados = ['Activo', 'Pendiente', 'Rechazado']
+  for (const nombreEstado of estadosPredeterminados) {
+    const [estInst, creadoEst] = await Estado.findOrCreate({
+      where: { estado: nombreEstado },
+      defaults: { estado: nombreEstado }
+    })
+    if (creadoEst) {
+      console.log(`  ✔ Estado '${nombreEstado}' creado exitosamente (ID: ${estInst.id_estado})`)
+    } else {
+      console.log(`  • Estado '${nombreEstado}' ya existía en el sistema.`)
+    }
+  }
 
   console.log('\n\x1b[33m⟳\x1b[0m  Insertando roles predeterminados de la institución...\n')
   const rolesPredeterminados = ['Director', 'Subdirector', 'Profesor']
@@ -32,6 +46,10 @@ async function seed() {
   const rolDirector = await Rol.findOne({ where: { nombre: 'Director' } })
   const idRolDirector = rolDirector ? rolDirector.id_rol : 1
 
+  // Obtener ID del estado Activo
+  const estadoActivo = await Estado.findOne({ where: { estado: 'Activo' } })
+  const idEstadoActivo = estadoActivo ? estadoActivo.id_estado : 1
+
   const [usuario, creado] = await Usuario.findOrCreate({
     where: { email: 'alejandrovilla2912@gmail.com' },
     defaults: {
@@ -39,6 +57,7 @@ async function seed() {
       email:           'alejandrovilla2912@gmail.com',
       contrasena_hash,
       id_rol:          idRolDirector,
+      id_estado:       idEstadoActivo,
       creado_en:       new Date(),
     },
   })
@@ -46,11 +65,12 @@ async function seed() {
   if (creado) {
     console.log('\x1b[32m✔\x1b[0m  Usuario creado exitosamente:')
   } else {
-    // Si ya existía, actualizar la contraseña y asegurar el rol Director
+    // Si ya existía, actualizar la contraseña y asegurar el rol Director y estado Activo
     await usuario.update({ 
       contrasena_hash, 
       nombre_completo: 'ALEJANDRO VILLA',
-      id_rol:          idRolDirector 
+      id_rol:          idRolDirector,
+      id_estado:       idEstadoActivo
     })
     console.log('\x1b[33m!\x1b[0m  Usuario ya existía — datos actualizados:')
   }
@@ -58,6 +78,7 @@ async function seed() {
   console.log(`     Nombre: ${usuario.nombre_completo}`)
   console.log(`     Email:  ${usuario.email}`)
   console.log(`     Rol:    Director (ID: ${usuario.id_rol})`)
+  console.log(`     Estado: Activo (ID: ${usuario.id_estado})`)
   console.log(`     ID:     ${usuario.id_usuario}`)
   console.log('')
   process.exit(0)

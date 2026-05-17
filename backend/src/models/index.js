@@ -3,6 +3,7 @@
 // Registra todos los modelos y define las relaciones entre tablas
 // ============================================================
 const Rol               = require('./Rol')
+const Estado            = require('./Estado')
 const Usuario           = require('./Usuario')
 const Categoria         = require('./Categoria')
 const Promocion         = require('./Promocion')
@@ -28,6 +29,10 @@ const DestinatarioEnvio = require('./DestinatarioEnvio')
 // Rol → Usuario (1:N)
 Rol.hasMany(Usuario, { foreignKey: 'id_rol', as: 'usuarios' })
 Usuario.belongsTo(Rol, { foreignKey: 'id_rol', as: 'rol' })
+
+// Estado → Usuario (1:N)
+Estado.hasMany(Usuario, { foreignKey: 'id_estado', as: 'usuarios' })
+Usuario.belongsTo(Estado, { foreignKey: 'id_estado', as: 'estado' })
 
 // Promocion → Proyecto
 Promocion.hasMany(Proyecto, { foreignKey: 'id_promocion', as: 'proyectos' })
@@ -74,6 +79,7 @@ Estudiante.belongsToMany(Proyecto, {
 // ── EXPORTAR ──────────────────────────────────────────────
 module.exports = {
   Rol,
+  Estado,
   Usuario,
   Categoria,
   Promocion,

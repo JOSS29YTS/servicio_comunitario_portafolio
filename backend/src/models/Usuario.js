@@ -19,6 +19,12 @@ const Usuario = sequelize.define('Usuario', {
     references: { model: 'rol', key: 'id_rol' },
     comment:    'ID del rol asignado al usuario',
   },
+  id_estado: {
+    type:       DataTypes.INTEGER,
+    allowNull:  false,
+    references: { model: 'estado', key: 'id_estado' },
+    comment:    'ID del estado de cuenta del usuario',
+  },
   nombre_completo: {
     type:      DataTypes.STRING(150),
     allowNull: false,
@@ -31,6 +37,11 @@ const Usuario = sequelize.define('Usuario', {
     validate:  { isEmail: true },
     comment:   'Correo institucional de la directora',
   },
+  telefono: {
+    type:      DataTypes.STRING(20),
+    allowNull: true,
+    comment:   'Número de teléfono opcional del usuario',
+  },
   contrasena_hash: {
     type:      DataTypes.STRING(255),
     allowNull: false,
@@ -41,10 +52,10 @@ const Usuario = sequelize.define('Usuario', {
     defaultValue: DataTypes.NOW,
     comment:      'Fecha de creación del usuario',
   },
-  ultimo_acceso: {
+  ultima_conexion: {
     type:      DataTypes.DATE,
     allowNull: true,
-    comment:   'Última vez que inició sesión',
+    comment:   'Fecha y hora de la última sesión iniciada',
   },
 }, {
   tableName:  'usuario',

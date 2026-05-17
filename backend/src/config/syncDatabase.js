@@ -19,6 +19,7 @@ async function sync() {
 
   console.log('\n\x1b[32m✔\x1b[0m  Base de datos sincronizada correctamente.')
   console.log('\x1b[36mTablas creadas/actualizadas:\x1b[0m')
+  console.log('  • estado')
   console.log('  • rol')
   console.log('  • usuario')
   console.log('  • categoria')
