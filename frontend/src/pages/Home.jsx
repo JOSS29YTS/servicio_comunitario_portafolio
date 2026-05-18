@@ -40,17 +40,6 @@ export default function Home() {
       {/* Barra de Navegación Flotante */}
       <nav className="home-navbar">
         <div className="home-nav-brand">
-          <div className="home-nav-logo">
-            {!logoError ? (
-              <img 
-                src="/logo_fatima.svg" 
-                alt="Colegio NSF" 
-                onError={() => setLogoError(true)} 
-              />
-            ) : (
-              <BookOpen className="fallback-logo-icon" size={24} />
-            )}
-          </div>
           <div className="home-nav-brand-text">
             <span className="school-title">Colegio NSF</span>
             <span className="school-sub">Nuestra Señora de Fátima</span>
@@ -79,6 +68,18 @@ export default function Home() {
 
       {/* Sección Hero */}
       <header className="home-hero">
+        <div className="hero-logo-large" title="Colegio Nuestra Señora de Fátima">
+          {!logoError ? (
+            <img 
+              src="/logo_fatima.svg" 
+              alt="Colegio NSF" 
+              onError={() => setLogoError(true)} 
+            />
+          ) : (
+            <BookOpen className="fallback-logo-icon-large" size={80} />
+          )}
+        </div>
+
         <h1 className="hero-title">
           Repositorio Académico <br />
           <span className="hero-title-gradient">Digital e Institucional</span>

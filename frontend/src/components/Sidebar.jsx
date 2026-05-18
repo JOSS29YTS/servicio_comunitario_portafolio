@@ -74,6 +74,17 @@ export default function Sidebar() {
         </NavLink>
       </nav>
 
+      {/* Devoción en Sidebar (Persistente) */}
+      <div className="sidebar-patron-badge" title="Nuestra Señora de Fátima, Patrona del Colegio">
+        <div className="sidebar-patron-avatar">
+          <img src="/virgen_fatima.png" alt="Nuestra Señora de Fátima" />
+        </div>
+        <div className="sidebar-patron-info">
+          <span className="sidebar-patron-name">Ntra. Sra. de Fátima</span>
+          <span className="sidebar-patron-tag">Patrona del Colegio</span>
+        </div>
+      </div>
+
       {/* User footer */}
       <div className="sidebar-footer">
         <div className="sidebar-user" onClick={handleLogout} title="Cerrar sesión">
