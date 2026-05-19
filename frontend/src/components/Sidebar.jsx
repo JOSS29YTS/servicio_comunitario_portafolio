@@ -22,6 +22,8 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
   const handleLogout = () => {
     logout()
@@ -88,8 +90,16 @@ export default function Sidebar() {
       {/* User footer */}
       <div className="sidebar-footer">
         <div className="sidebar-user" onClick={handleLogout} title="Cerrar sesión">
-          <div className="user-avatar">
-            {user?.iniciales || 'DI'}
+          <div className="user-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {user?.avatar ? (
+              <img 
+                src={`${backendUrl}${user.avatar}`} 
+                alt="Avatar" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+              />
+            ) : (
+              user?.iniciales || 'DI'
+            )}
           </div>
           <div className="user-info">
             <div className="user-name">{user?.nombre_completo || user?.nombre}</div>

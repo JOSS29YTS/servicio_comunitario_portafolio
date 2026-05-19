@@ -11,6 +11,8 @@ const express  = require('express')
 const bcrypt   = require('bcryptjs')
 const jwt      = require('jsonwebtoken')
 const { body, validationResult } = require('express-validator')
+const fs       = require('fs')
+const path     = require('path')
 
 const { Usuario, Rol, Estado } = require('../models')
 const authMiddleware = require('../middlewares/auth')
@@ -95,6 +97,7 @@ router.post(
           nombre_completo: usuario.nombre_completo,
           email:           usuario.email,
           telefono:        usuario.telefono,
+          avatar:          usuario.avatar,
           rol:             usuario.rol ? usuario.rol.nombre : null,
           estado:          usuario.estado ? usuario.estado.estado : null,
           ultima_conexion: usuario.ultima_conexion,
@@ -170,6 +173,7 @@ router.post(
           nombre_completo: usuario.nombre_completo,
           email:           usuario.email,
           telefono:        usuario.telefono,
+          avatar:          usuario.avatar,
           rol:             usuario.rol ? usuario.rol.nombre : null,
           estado:          usuario.estado ? usuario.estado.estado : null,
         },
@@ -185,7 +189,7 @@ router.post(
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const usuario = await Usuario.findByPk(req.usuario.id_usuario, {
-      attributes: ['id_usuario', 'nombre_completo', 'email', 'telefono', 'creado_en', 'ultima_conexion'],
+      attributes: ['id_usuario', 'nombre_completo', 'email', 'telefono', 'avatar', 'creado_en', 'ultima_conexion'],
       include: [
         { model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] },
         { model: Estado, as: 'estado', attributes: ['id_estado', 'estado'] }
@@ -203,6 +207,7 @@ router.get('/me', authMiddleware, async (req, res) => {
         nombre_completo: usuario.nombre_completo,
         email:           usuario.email,
         telefono:        usuario.telefono,
+        avatar:          usuario.avatar,
         creado_en:       usuario.creado_en,
         ultima_conexion: usuario.ultima_conexion,
         rol:             usuario.rol ? usuario.rol.nombre : null,
@@ -264,6 +269,7 @@ router.put(
           nombre_completo: usuario.nombre_completo,
           email:           usuario.email,
           telefono:        usuario.telefono,
+          avatar:          usuario.avatar,
           rol:             usuario.rol ? usuario.rol.nombre : null,
           estado:          usuario.estado ? usuario.estado.estado : null,
           ultima_conexion: usuario.ultima_conexion,
@@ -324,5 +330,139 @@ router.put(
     }
   }
 )
+
+// ── PUT /api/auth/avatar ──────────────────────────────────
+// Cargar/Actualizar imagen de avatar del usuario (Base64 ligero)
+router.put('/avatar', authMiddleware, async (req, res) => {
+  try {
+    const { fileData } = req.body
+    if (!fileData) {
+      return res.status(400).json({ ok: false, mensaje: 'No se recibió la información de la imagen.' })
+    }
+
+    // 1. Validar estrictamente que sea un Data-URI de imagen válido
+    const match = fileData.match(/^data:image\/(png|jpeg|jpg|webp);base64,/)
+    if (!match) {
+      return res.status(400).json({ ok: false, mensaje: 'El archivo enviado no es una imagen válida.' })
+    }
+
+    const ext = match[1] === 'jpeg' ? 'jpg' : match[1]
+    const base64Data = fileData.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '')
+
+    // 2. Buscar usuario para obtener su estado actual
+    const usuario = await Usuario.findByPk(req.usuario.id_usuario)
+    if (!usuario) {
+      return res.status(404).json({ ok: false, mensaje: 'Usuario no encontrado.' })
+    }
+
+    // 3. Crear directorio de avatares si no existe
+    const uploadsDir = path.join(__dirname, '..', '..', 'uploads')
+    const avatarsDir = path.join(uploadsDir, 'avatars')
+    if (!fs.existsSync(avatarsDir)) {
+      fs.mkdirSync(avatarsDir, { recursive: true })
+    }
+
+    // 4. Limpieza física del avatar anterior
+    if (usuario.avatar) {
+      const fileSubPath = usuario.avatar.replace(/^\/uploads/, '') // Ej: "/avatars/user_1_123.jpg"
+      const absolutePath = path.join(uploadsDir, fileSubPath)
+      try {
+        if (fs.existsSync(absolutePath)) {
+          fs.unlinkSync(absolutePath)
+        }
+      } catch (err) {
+        console.error('[AVATAR] Error al eliminar archivo anterior:', err.message)
+      }
+    }
+
+    // 5. Escribir el nuevo archivo de imagen comprimida en disco
+    const fileName = `user_${usuario.id_usuario}_${Date.now()}.${ext}`
+    const filePath = path.join(avatarsDir, fileName)
+    fs.writeFileSync(filePath, base64Data, 'base64')
+
+    // 6. Guardar la ruta relativa del avatar en la base de datos
+    const relativeUrl = `/uploads/avatars/${fileName}`
+    await usuario.update({ avatar: relativeUrl })
+
+    // 7. Retornar el usuario actualizado
+    const usuarioActualizado = await Usuario.findByPk(usuario.id_usuario, {
+      include: [
+        { model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] },
+        { model: Estado, as: 'estado', attributes: ['id_estado', 'estado'] }
+      ]
+    })
+
+    return res.json({
+      ok: true,
+      mensaje: '✔ Imagen de perfil cargada y actualizada exitosamente.',
+      usuario: {
+        id_usuario:      usuarioActualizado.id_usuario,
+        nombre_completo: usuarioActualizado.nombre_completo,
+        email:           usuarioActualizado.email,
+        telefono:        usuarioActualizado.telefono,
+        avatar:          usuarioActualizado.avatar,
+        rol:             usuarioActualizado.rol ? usuarioActualizado.rol.nombre : null,
+        estado:          usuarioActualizado.estado ? usuarioActualizado.estado.estado : null,
+        ultima_conexion: usuarioActualizado.ultima_conexion,
+      }
+    })
+  } catch (error) {
+    console.error('[AVATAR] Error al subir avatar:', error)
+    return res.status(500).json({ ok: false, mensaje: 'Error al procesar y guardar la imagen de perfil.' })
+  }
+})
+
+// ── DELETE /api/auth/avatar ───────────────────────────────
+// Eliminar imagen de avatar personalizada y volver a las iniciales
+router.delete('/avatar', authMiddleware, async (req, res) => {
+  try {
+    const usuario = await Usuario.findByPk(req.usuario.id_usuario)
+    if (!usuario) {
+      return res.status(404).json({ ok: false, mensaje: 'Usuario no encontrado.' })
+    }
+
+    // 1. Si tiene un avatar registrado, eliminar físicamente el archivo del disco
+    if (usuario.avatar) {
+      const fileSubPath = usuario.avatar.replace(/^\/uploads/, '')
+      const absolutePath = path.join(__dirname, '..', '..', 'uploads', fileSubPath)
+      try {
+        if (fs.existsSync(absolutePath)) {
+          fs.unlinkSync(absolutePath)
+        }
+      } catch (err) {
+        console.error('[AVATAR] Error al eliminar archivo físico:', err.message)
+      }
+    }
+
+    // 2. Actualizar campo avatar a NULL en la base de datos
+    await usuario.update({ avatar: null })
+
+    // 3. Retornar el usuario con avatar: null
+    const usuarioActualizado = await Usuario.findByPk(usuario.id_usuario, {
+      include: [
+        { model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] },
+        { model: Estado, as: 'estado', attributes: ['id_estado', 'estado'] }
+      ]
+    })
+
+    return res.json({
+      ok: true,
+      mensaje: '✔ Imagen de perfil eliminada. Se han restaurado las iniciales por defecto.',
+      usuario: {
+        id_usuario:      usuarioActualizado.id_usuario,
+        nombre_completo: usuarioActualizado.nombre_completo,
+        email:           usuarioActualizado.email,
+        telefono:        usuarioActualizado.telefono,
+        avatar:          usuarioActualizado.avatar,
+        rol:             usuarioActualizado.rol ? usuarioActualizado.rol.nombre : null,
+        estado:          usuarioActualizado.estado ? usuarioActualizado.estado.estado : null,
+        ultima_conexion: usuarioActualizado.ultima_conexion,
+      }
+    })
+  } catch (error) {
+    console.error('[AVATAR] Error al eliminar avatar:', error)
+    return res.status(500).json({ ok: false, mensaje: 'Error al eliminar la imagen de perfil.' })
+  }
+})
 
 module.exports = router

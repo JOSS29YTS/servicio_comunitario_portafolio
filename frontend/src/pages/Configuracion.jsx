@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Settings, User, Database, Shield, Camera, 
   Key, Bell, Globe, Activity, HardDrive, 
@@ -13,6 +13,10 @@ export default function Configuracion() {
   const [isEditing, setIsEditing] = useState(false)
   const [telefono, setTelefono] = useState('')
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
+
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
   // Sincronizar el teléfono con los datos cargados del usuario
   useEffect(() => {
@@ -64,6 +68,67 @@ export default function Configuracion() {
     }
   }
 
+  // Cargar y actualizar avatar
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = async () => {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        
+        const targetSize = 200
+        canvas.width = targetSize
+        canvas.height = targetSize
+        
+        // Recorte cuadrado centrado y proporcional (sin distorsión)
+        const size = Math.min(img.width, img.height)
+        const sx = (img.width - size) / 2
+        const sy = (img.height - size) / 2
+        
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, targetSize, targetSize)
+        
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8)
+        
+        setUploading(true)
+        try {
+          const { data } = await api.put('/auth/avatar', { fileData: compressedDataUrl })
+          if (data.ok) {
+            actualizarUsuario({ avatar: data.usuario.avatar })
+          }
+        } catch (error) {
+          console.error('Error al subir avatar:', error)
+          alert(error.response?.data?.mensaje || 'Error al subir la imagen de perfil.')
+        } finally {
+          setUploading(false)
+        }
+      }
+      img.src = reader.result
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Eliminar avatar y restaurar iniciales
+  const handleRemoveAvatar = async () => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar tu foto de perfil y restaurar las iniciales?')) {
+      setUploading(true)
+      try {
+        const { data } = await api.delete('/auth/avatar')
+        if (data.ok) {
+          actualizarUsuario({ avatar: null })
+        }
+      } catch (error) {
+        console.error('Error al quitar avatar:', error)
+        alert('No se pudo eliminar la imagen de perfil.')
+      } finally {
+        setUploading(false)
+      }
+    }
+  }
+
   // Formatear marca de tiempo de última conexión
   const formatConexion = (fechaIso) => {
     if (!fechaIso) return 'Hoy'
@@ -92,18 +157,58 @@ export default function Configuracion() {
           {/* Perfil del Usuario */}
           <div className="card card-pad">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-              <div className="avatar-edit-container">
-                <div className="user-avatar">
-                  {user?.iniciales || 'AV'}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div className="avatar-edit-container">
+                  <div className="user-avatar" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {user?.avatar ? (
+                      <img 
+                        src={`${backendUrl}${user.avatar}`} 
+                        alt="Avatar" 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                    ) : (
+                      user?.iniciales || 'AV'
+                    )}
+                  </div>
+                  <button 
+                    className="avatar-edit-btn" 
+                    title="Cambiar foto" 
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <Camera size={14} />
+                  </button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    accept="image/*" 
+                    onChange={handleAvatarChange} 
+                    style={{ display: 'none' }} 
+                  />
                 </div>
-                <button className="avatar-edit-btn" title="Cambiar foto">
-                  <Camera size={14} />
-                </button>
+                {user?.avatar && (
+                  <button 
+                    className="btn btn-ghost btn-sm" 
+                    onClick={handleRemoveAvatar} 
+                    style={{ 
+                      color: 'var(--red-500)', 
+                      fontSize: '11.5px', 
+                      padding: '2px 8px', 
+                      height: 'auto', 
+                      marginTop: '8px',
+                      justifyContent: 'center',
+                      width: 'auto'
+                    }}
+                    disabled={uploading}
+                  >
+                    Quitar foto
+                  </button>
+                )}
               </div>
               <button 
                 className={`btn ${isEditing ? 'btn-primary' : 'btn-secondary'}`}
                 onClick={handleSaveProfile}
-                disabled={loading}
+                disabled={loading || uploading}
               >
                 {loading ? 'Guardando...' : (isEditing ? 'Guardar' : 'Editar Perfil')}
               </button>

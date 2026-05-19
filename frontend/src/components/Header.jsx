@@ -32,6 +32,8 @@ export default function Header() {
   const { user } = useAuth()
   const page = PAGE_TITLES[location.pathname] || { title: 'Sistema', sub: '' }
   
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+  
   // Reloj dinámico en tiempo real
   const [currentTime, setCurrentTime] = React.useState(new Date())
 
@@ -130,10 +132,18 @@ export default function Header() {
 
         <div
           className="user-avatar"
-          style={{ width: 36, height: 36, fontSize: 13, cursor: 'default' }}
+          style={{ width: 36, height: 36, fontSize: 13, cursor: 'default', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           title={`${user?.nombre_completo || user?.nombre || 'Usuario'}`}
         >
-          {user?.iniciales || 'U'}
+          {user?.avatar ? (
+            <img 
+              src={`${backendUrl}${user.avatar}`} 
+              alt="Avatar" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
+          ) : (
+            user?.iniciales || 'U'
+          )}
         </div>
       </div>
     </header>

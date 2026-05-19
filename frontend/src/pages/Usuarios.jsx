@@ -6,6 +6,8 @@ export default function Usuarios() {
   const { user } = useAuth()
   const [showMenu, setShowMenu] = useState(false)
   
+  const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+  
   const usuarios = [
     { 
       id: 1, 
@@ -13,7 +15,8 @@ export default function Usuarios() {
       email: user?.email || '', 
       rol: user?.rol || 'Director', 
       estado: 'Activo', 
-      iniciales: user?.iniciales || 'AV' 
+      iniciales: user?.iniciales || 'AV',
+      avatar: user?.avatar || null
     }
   ]
 
@@ -50,8 +53,16 @@ export default function Usuarios() {
                 <tr key={u.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div className="user-avatar" style={{ width: 32, height: 32, fontSize: 12 }}>
-                        {u.iniciales}
+                      <div className="user-avatar" style={{ width: 32, height: 32, fontSize: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {u.avatar ? (
+                          <img 
+                            src={`${backendUrl}${u.avatar}`} 
+                            alt="Avatar" 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                          />
+                        ) : (
+                          u.iniciales
+                        )}
                       </div>
                       <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{u.nombre}</span>
                     </div>

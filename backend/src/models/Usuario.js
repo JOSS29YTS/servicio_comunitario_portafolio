@@ -42,6 +42,11 @@ const Usuario = sequelize.define('Usuario', {
     allowNull: true,
     comment:   'Número de teléfono opcional del usuario',
   },
+  avatar: {
+    type:      DataTypes.STRING(255),
+    allowNull: true,
+    comment:   'Ruta relativa del archivo de avatar del usuario guardado localmente',
+  },
   contrasena_hash: {
     type:      DataTypes.STRING(255),
     allowNull: false,
