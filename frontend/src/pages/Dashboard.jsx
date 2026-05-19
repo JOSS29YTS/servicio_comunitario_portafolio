@@ -64,7 +64,7 @@ export default function Dashboard() {
       </div>
 
       {/* Contenido principal */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24 }}>
+      <div className="dashboard-layout">
         {/* Tabla proyectos recientes */}
         <div className="card">
           <div style={{
@@ -90,38 +90,35 @@ export default function Dashboard() {
               <ArrowRight size={14} />
             </button>
           </div>
-
-          <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Proyecto</th>
-                  <th>Estudiante(s)</th>
-                  <th>Año</th>
-                  <th>Categoría</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recientes.length === 0 ? (
+          {recientes.length === 0 ? (
+            <div style={{ padding: '60px 24px', textAlign: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                <div style={{ background: 'var(--bg-icon-special)', padding: 16, borderRadius: 'var(--radius-full)' }}>
+                  <FolderOpen size={32} color="var(--text-muted)" />
+                </div>
+                <div>
+                  <h4 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>Sin proyectos recientes</h4>
+                  <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>No hay proyectos registrados aún en la plataforma.</p>
+                </div>
+                <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }} onClick={() => navigate('/nuevo-proyecto')}>
+                  <Plus size={16} /> Registrar proyecto
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+              <table>
+                <thead>
                   <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', padding: '60px 0' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                        <div style={{ background: 'var(--bg-icon-special)', padding: 16, borderRadius: 'var(--radius-full)' }}>
-                          <FolderOpen size={32} color="var(--text-muted)" />
-                        </div>
-                        <div>
-                          <h4 style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>Sin proyectos recientes</h4>
-                          <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>No hay proyectos registrados aún en la plataforma.</p>
-                        </div>
-                        <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }} onClick={() => navigate('/nuevo-proyecto')}>
-                          <Plus size={16} /> Registrar proyecto
-                        </button>
-                      </div>
-                    </td>
+                    <th>Proyecto</th>
+                    <th>Estudiante(s)</th>
+                    <th>Año</th>
+                    <th>Categoría</th>
+                    <th>Acciones</th>
                   </tr>
-                ) : (
-                  recientes.map(p => (
+                </thead>
+                <tbody>
+                  {recientes.map(p => (
                     <tr key={p.id}>
                       <td>{p.nombre}</td>
                       <td>{p.estudiantes.join(', ')}</td>
@@ -131,11 +128,11 @@ export default function Dashboard() {
                         <button className="btn btn-primary btn-sm">Ver</button>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Panel lateral */}

@@ -215,7 +215,7 @@ export default function Configuracion() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="detail-grid" style={{ gap: 16 }}>
                 <div>
                   <div className="detail-label">Nombre Completo</div>
                   <div className="detail-value">{user?.nombre_completo}</div>
@@ -245,7 +245,7 @@ export default function Configuracion() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="detail-grid" style={{ gap: 16 }}>
                 <div>
                   <div className="detail-label">Correo</div>
                   <div className="detail-value">{user?.email}</div>

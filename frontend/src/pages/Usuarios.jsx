@@ -36,8 +36,9 @@ export default function Usuarios() {
         </p>
       </div>
 
-      <div className="card" style={{ background: 'var(--bg-card-special)', overflow: 'visible' }}>
-        <div className="table-container" style={{ border: 'none', overflow: 'visible' }}>
+      {/* Vista de Escritorio (Tabla) */}
+      <div className="card desktop-view" style={{ background: 'var(--bg-card-special)' }}>
+        <div className="table-container">
           <table>
             <thead>
               <tr>
@@ -83,6 +84,7 @@ export default function Usuarios() {
                       <button 
                         className="btn btn-ghost btn-sm btn-icon" 
                         onClick={() => setShowMenu(!showMenu)}
+                        aria-label="Acciones de usuario"
                       >
                         <MoreHorizontal size={18} />
                       </button>
@@ -108,6 +110,67 @@ export default function Usuarios() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Vista de Móvil (Tarjetas) */}
+      <div className="mobile-view">
+        {usuarios.map(u => (
+          <div key={u.id} className="card card-pad" style={{ background: 'var(--bg-card-special)', marginBottom: 16, overflow: 'visible', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div className="user-avatar" style={{ width: 40, height: 40, fontSize: 14, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {u.avatar ? (
+                    <img 
+                      src={`${backendUrl}${u.avatar}`} 
+                      alt="Avatar" 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                  ) : (
+                    u.iniciales
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 14.5 }}>{u.nombre}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{u.email}</div>
+                </div>
+              </div>
+              
+              <div className="user-menu-container">
+                <button 
+                  className="btn btn-ghost btn-sm btn-icon" 
+                  onClick={() => setShowMenu(!showMenu)}
+                  aria-label="Acciones de usuario"
+                >
+                  <MoreHorizontal size={18} />
+                </button>
+
+                {showMenu && (
+                  <div className="user-menu-dropdown" style={{ top: '36px', right: 0 }}>
+                    <button className="user-menu-item">
+                      <Edit3 size={14} /> Editar Rol
+                    </button>
+                    <button className="user-menu-item">
+                      <UserMinus size={14} /> Suspender Acceso
+                    </button>
+                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }}></div>
+                    <button className="user-menu-item danger">
+                      <Trash2 size={14} /> Eliminar Usuario
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <span className="badge badge-indigo" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Shield size={12} /> {u.rol}
+              </span>
+              <span className="badge badge-green" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <UserCheck size={12} /> {u.estado}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
 
       <div style={{ marginTop: 24, padding: 16, background: 'rgba(99, 102, 241, 0.05)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--indigo-500)', textAlign: 'center' }}>

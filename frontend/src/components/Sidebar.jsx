@@ -10,6 +10,7 @@ import {
   LogOut,
   BookOpen,
   Users,
+  X,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -19,7 +20,7 @@ const NAV_ITEMS = [
   { to: '/usuarios',         label: 'Usuarios',         icon: Users },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   
@@ -31,7 +32,10 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <button className="sidebar-close-btn" onClick={onClose} title="Cerrar menú" aria-label="Cerrar menú lateral">
+        <X size={20} />
+      </button>
       {/* Brand */}
       <div className="sidebar-brand">
         <div className="sidebar-logo">

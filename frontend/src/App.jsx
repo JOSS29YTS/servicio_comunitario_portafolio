@@ -16,11 +16,19 @@ import Notificaciones from './pages/Notificaciones'
 import Usuarios from './pages/Usuarios'
 
 function AppLayout({ children }) {
+  const [sidebarOpen, setSidebarOpen] = React.useState(false)
+
   return (
     <div className="app-layout">
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {sidebarOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setSidebarOpen(false)} 
+        />
+      )}
       <div className="main-content">
-        <Header />
+        <Header onMenuClick={() => setSidebarOpen(true)} />
         {children}
       </div>
     </div>

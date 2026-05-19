@@ -1,6 +1,6 @@
 import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Bell, Sun, Moon } from 'lucide-react'
+import { Bell, Sun, Moon, Menu } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 const PAGE_TITLES = {
@@ -26,7 +26,7 @@ function formatDate(date) {
   })
 }
 
-export default function Header() {
+export default function Header({ onMenuClick }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -68,6 +68,14 @@ export default function Header() {
 
   return (
     <header className="header">
+      <button 
+        className="btn btn-ghost btn-icon mobile-menu-btn" 
+        onClick={onMenuClick}
+        title="Abrir menú"
+        aria-label="Abrir menú lateral"
+      >
+        <Menu size={20} />
+      </button>
       <div className="header-title">
         <h1>{page.title}</h1>
         {page.sub && <p>{page.sub}</p>}
