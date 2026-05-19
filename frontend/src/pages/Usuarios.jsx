@@ -4,7 +4,19 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Usuarios() {
   const { user } = useAuth()
-  const [showMenu, setShowMenu] = useState(false)
+  const [activeMenuUserId, setActiveMenuUserId] = useState(null)
+
+  React.useEffect(() => {
+    function handleClickOutside(event) {
+      if (!event.target.closest('.user-menu-container')) {
+        setActiveMenuUserId(null)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
   
   const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
   
@@ -83,13 +95,13 @@ export default function Usuarios() {
                     <div className="user-menu-container">
                       <button 
                         className="btn btn-ghost btn-sm btn-icon" 
-                        onClick={() => setShowMenu(!showMenu)}
+                        onClick={() => setActiveMenuUserId(activeMenuUserId === u.id ? null : u.id)}
                         aria-label="Acciones de usuario"
                       >
                         <MoreHorizontal size={18} />
                       </button>
 
-                      {showMenu && (
+                      {activeMenuUserId === u.id && (
                         <div className="user-menu-dropdown">
                           <button className="user-menu-item">
                             <Edit3 size={14} /> Editar Rol
@@ -138,13 +150,13 @@ export default function Usuarios() {
               <div className="user-menu-container">
                 <button 
                   className="btn btn-ghost btn-sm btn-icon" 
-                  onClick={() => setShowMenu(!showMenu)}
+                  onClick={() => setActiveMenuUserId(activeMenuUserId === u.id ? null : u.id)}
                   aria-label="Acciones de usuario"
                 >
                   <MoreHorizontal size={18} />
                 </button>
 
-                {showMenu && (
+                {activeMenuUserId === u.id && (
                   <div className="user-menu-dropdown" style={{ top: '36px', right: 0 }}>
                     <button className="user-menu-item">
                       <Edit3 size={14} /> Editar Rol

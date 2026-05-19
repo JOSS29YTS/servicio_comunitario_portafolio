@@ -1629,11 +1629,16 @@ tr:hover td {
   .sidebar {
     transform: translateX(-100%);
     box-shadow: none;
+    z-index: 10001; /* Asegurar que flote sobre todo en móviles (ej. dropdown de usuarios a 9999) */
   }
 
   .sidebar.open {
     transform: translateX(0) !important;
     box-shadow: var(--shadow-xl);
+  }
+
+  .sidebar-overlay {
+    z-index: 10000; /* Justo debajo del sidebar móvil, pero por encima de los dropdowns */
   }
 
   .stats-grid {
