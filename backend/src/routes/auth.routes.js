@@ -465,4 +465,324 @@ router.delete('/avatar', authMiddleware, async (req, res) => {
   }
 })
 
+// ============================================================
+// ENDPOINTS DE ADMINISTRACIÓN DE USUARIOS
+// ============================================================
+
+// ── GET /api/auth/usuarios ───────────────────────────────
+// Obtener todos los usuarios de la base de datos (Protegido, solo Director/Subdirector)
+router.get('/usuarios', authMiddleware, async (req, res) => {
+  try {
+    // Verificar que el usuario solicitante sea Director o Subdirector
+    const usuarioSolicitante = await Usuario.findByPk(req.usuario.id_usuario, {
+      include: [{ model: Rol, as: 'rol' }]
+    })
+
+    if (!usuarioSolicitante || (usuarioSolicitante.rol?.nombre !== 'Director' && usuarioSolicitante.rol?.nombre !== 'Subdirector')) {
+      return res.status(403).json({
+        ok: false,
+        mensaje: 'Acceso denegado. No tienes permisos de administración.'
+      })
+    }
+
+    const usuarios = await Usuario.findAll({
+      attributes: ['id_usuario', 'nombre_completo', 'email', 'telefono', 'avatar', 'creado_en', 'ultima_conexion'],
+      include: [
+        { model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] },
+        { model: Estado, as: 'estado', attributes: ['id_estado', 'estado'] }
+      ],
+      order: [['id_usuario', 'ASC']]
+    })
+
+    // Función para obtener iniciales
+    const getIniciales = (nombreCompleto = '') => {
+      const partes = nombreCompleto.trim().split(' ').filter(Boolean)
+      if (partes.length === 0) return 'U'
+      if (partes.length === 1) return partes[0][0].toUpperCase()
+      return (partes[0][0] + partes[partes.length - 1][0]).toUpperCase()
+    }
+
+    const usuariosMapeados = usuarios.map(u => ({
+      id: u.id_usuario,
+      nombre: u.nombre_completo,
+      email: u.email,
+      telefono: u.telefono,
+      avatar: u.avatar,
+      rol: u.rol ? u.rol.nombre : null,
+      id_rol: u.rol ? u.rol.id_rol : null,
+      estado: u.estado ? u.estado.estado : null,
+      id_estado: u.estado ? u.estado.id_estado : null,
+      creado_en: u.creado_en,
+      ultima_conexion: u.ultima_conexion,
+      iniciales: getIniciales(u.nombre_completo)
+    }))
+
+    return res.json({
+      ok: true,
+      usuarios: usuariosMapeados
+    })
+  } catch (error) {
+    console.error('[AUTH] Error al obtener usuarios:', error)
+    return res.status(500).json({ ok: false, mensaje: 'Error interno al obtener la lista de usuarios.' })
+  }
+})
+
+// ── GET /api/auth/roles ──────────────────────────────────
+// Obtener todos los roles disponibles (Protegido, solo Director/Subdirector)
+router.get('/roles', authMiddleware, async (req, res) => {
+  try {
+    const roles = await Rol.findAll({ order: [['id_rol', 'ASC']] })
+    return res.json({ ok: true, roles })
+  } catch (error) {
+    console.error('[AUTH] Error al obtener roles:', error)
+    return res.status(500).json({ ok: false, mensaje: 'Error interno al obtener los roles.' })
+  }
+})
+
+// ── GET /api/auth/estados ────────────────────────────────
+// Obtener todos los estados de cuenta disponibles (Protegido, solo Director/Subdirector)
+router.get('/estados', authMiddleware, async (req, res) => {
+  try {
+    const estados = await Estado.findAll({ order: [['id_estado', 'ASC']] })
+    return res.json({ ok: true, estados })
+  } catch (error) {
+    console.error('[AUTH] Error al obtener estados:', error)
+    return res.status(500).json({ ok: false, mensaje: 'Error interno al obtener los estados.' })
+  }
+})
+
+// ── PUT /api/auth/usuarios/:id/rol ───────────────────────
+// Actualizar el rol de un usuario (Protegido, solo Director/Subdirector)
+router.put('/usuarios/:id/rol', authMiddleware, async (req, res) => {
+  const { id } = req.params
+  const { id_rol } = req.body
+
+  try {
+    // Validar permisos del solicitante
+    const usuarioSolicitante = await Usuario.findByPk(req.usuario.id_usuario, {
+      include: [{ model: Rol, as: 'rol' }]
+    })
+
+    if (!usuarioSolicitante || (usuarioSolicitante.rol?.nombre !== 'Director' && usuarioSolicitante.rol?.nombre !== 'Subdirector')) {
+      return res.status(403).json({
+        ok: false,
+        mensaje: 'Acceso denegado. No tienes permisos de administración.'
+      })
+    }
+
+    // Validar que el rol existe
+    const rolExiste = await Rol.findByPk(id_rol)
+    if (!rolExiste) {
+      return res.status(400).json({ ok: false, mensaje: 'El rol seleccionado no es válido.' })
+    }
+
+    // Buscar el usuario a actualizar
+    const usuario = await Usuario.findByPk(id)
+    if (!usuario) {
+      return res.status(404).json({ ok: false, mensaje: 'Usuario no encontrado.' })
+    }
+
+    // Impedir que un Subdirector cambie el rol de un Director
+    const usuarioRolActual = await Rol.findByPk(usuario.id_rol)
+    if (usuarioSolicitante.rol.nombre === 'Subdirector' && usuarioRolActual?.nombre === 'Director') {
+      return res.status(403).json({
+        ok: false,
+        mensaje: 'No tienes permisos para modificar el rol de un Director.'
+      })
+    }
+
+    await usuario.update({ id_rol })
+
+    // Obtener usuario actualizado con asociaciones
+    const usuarioActualizado = await Usuario.findByPk(id, {
+      include: [
+        { model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] },
+        { model: Estado, as: 'estado', attributes: ['id_estado', 'estado'] }
+      ]
+    })
+
+    return res.json({
+      ok: true,
+      mensaje: '✔ Rol de usuario actualizado exitosamente.',
+      usuario: {
+        id: usuarioActualizado.id_usuario,
+        nombre: usuarioActualizado.nombre_completo,
+        email: usuarioActualizado.email,
+        telefono: usuarioActualizado.telefono,
+        avatar: usuarioActualizado.avatar,
+        rol: usuarioActualizado.rol ? usuarioActualizado.rol.nombre : null,
+        id_rol: usuarioActualizado.rol ? usuarioActualizado.rol.id_rol : null,
+        estado: usuarioActualizado.estado ? usuarioActualizado.estado.estado : null,
+        id_estado: usuarioActualizado.estado ? usuarioActualizado.estado.id_estado : null,
+      }
+    })
+  } catch (error) {
+    console.error('[AUTH] Error al actualizar rol:', error)
+    return res.status(500).json({ ok: false, mensaje: 'Error interno al actualizar el rol del usuario.' })
+  }
+})
+
+// ── PUT /api/auth/usuarios/:id/estado ────────────────────
+// Actualizar el estado de cuenta de un usuario (Protegido, solo Director/Subdirector)
+router.put('/usuarios/:id/estado', authMiddleware, async (req, res) => {
+  const { id } = req.params
+  const { id_estado } = req.body
+
+  try {
+    // Validar permisos del solicitante
+    const usuarioSolicitante = await Usuario.findByPk(req.usuario.id_usuario, {
+      include: [{ model: Rol, as: 'rol' }]
+    })
+
+    if (!usuarioSolicitante || (usuarioSolicitante.rol?.nombre !== 'Director' && usuarioSolicitante.rol?.nombre !== 'Subdirector')) {
+      return res.status(403).json({
+        ok: false,
+        mensaje: 'Acceso denegado. No tienes permisos de administración.'
+      })
+    }
+
+    // Validar que el estado existe
+    const estadoExiste = await Estado.findByPk(id_estado)
+    if (!estadoExiste) {
+      return res.status(400).json({ ok: false, mensaje: 'El estado seleccionado no es válido.' })
+    }
+
+    // Buscar el usuario a actualizar
+    const usuario = await Usuario.findByPk(id)
+    if (!usuario) {
+      return res.status(404).json({ ok: false, mensaje: 'Usuario no encontrado.' })
+    }
+
+    // Impedir que un Subdirector cambie el estado de un Director
+    const usuarioRolActual = await Rol.findByPk(usuario.id_rol)
+    if (usuarioSolicitante.rol.nombre === 'Subdirector' && usuarioRolActual?.nombre === 'Director') {
+      return res.status(403).json({
+        ok: false,
+        mensaje: 'No tienes permisos para modificar el estado de un Director.'
+      })
+    }
+
+    // Impedir desactivarse a uno mismo
+    if (parseInt(id) === req.usuario.id_usuario) {
+      return res.status(400).json({ ok: false, mensaje: 'No puedes cambiar el estado de tu propia cuenta.' })
+    }
+
+    await usuario.update({ id_estado })
+
+    // Obtener usuario actualizado con asociaciones
+    const usuarioActualizado = await Usuario.findByPk(id, {
+      include: [
+        { model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] },
+        { model: Estado, as: 'estado', attributes: ['id_estado', 'estado'] }
+      ]
+    })
+
+    return res.json({
+      ok: true,
+      mensaje: `✔ Estado de usuario actualizado a "${estadoExiste.estado}" exitosamente.`,
+      usuario: {
+        id: usuarioActualizado.id_usuario,
+        nombre: usuarioActualizado.nombre_completo,
+        email: usuarioActualizado.email,
+        telefono: usuarioActualizado.telefono,
+        avatar: usuarioActualizado.avatar,
+        rol: usuarioActualizado.rol ? usuarioActualizado.rol.nombre : null,
+        id_rol: usuarioActualizado.rol ? usuarioActualizado.rol.id_rol : null,
+        estado: usuarioActualizado.estado ? usuarioActualizado.estado.estado : null,
+        id_estado: usuarioActualizado.estado ? usuarioActualizado.estado.id_estado : null,
+      }
+    })
+  } catch (error) {
+    console.error('[AUTH] Error al actualizar estado:', error)
+    return res.status(500).json({ ok: false, mensaje: 'Error interno al actualizar el estado del usuario.' })
+  }
+})
+
+// ── DELETE /api/auth/usuarios/:id ────────────────────────
+// Eliminar un usuario (Protegido, solo Director/Subdirector con validación de dependencias)
+router.delete('/usuarios/:id', authMiddleware, async (req, res) => {
+  const { id } = req.params
+
+  try {
+    // Validar permisos del solicitante
+    const usuarioSolicitante = await Usuario.findByPk(req.usuario.id_usuario, {
+      include: [{ model: Rol, as: 'rol' }]
+    })
+
+    if (!usuarioSolicitante || (usuarioSolicitante.rol?.nombre !== 'Director' && usuarioSolicitante.rol?.nombre !== 'Subdirector')) {
+      return res.status(403).json({
+        ok: false,
+        mensaje: 'Acceso denegado. No tienes permisos de administración.'
+      })
+    }
+
+    // Impedir eliminarse a uno mismo
+    if (parseInt(id) === req.usuario.id_usuario) {
+      return res.status(400).json({ ok: false, mensaje: 'No puedes eliminar tu propia cuenta.' })
+    }
+
+    // Buscar el usuario a eliminar
+    const usuario = await Usuario.findByPk(id)
+    if (!usuario) {
+      return res.status(404).json({ ok: false, mensaje: 'Usuario no encontrado.' })
+    }
+
+    // Impedir que un Subdirector elimine a un Director o a otro Subdirector
+    const usuarioRolActual = await Rol.findByPk(usuario.id_rol)
+    if (usuarioSolicitante.rol.nombre === 'Subdirector' && 
+        (usuarioRolActual?.nombre === 'Director' || usuarioRolActual?.nombre === 'Subdirector')) {
+      return res.status(403).json({
+        ok: false,
+        mensaje: 'No tienes permisos para eliminar a otros directores o subdirectores.'
+      })
+    }
+
+    // VALIDACIÓN DE INTEGRIDAD REFERENCIAL
+    // 1. Verificar si tiene proyectos registrados
+    const { Proyecto, Envio } = require('../models')
+    const tieneProyectos = await Proyecto.findOne({ where: { registrado_por: id } })
+    if (tieneProyectos) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: 'No se puede eliminar al usuario porque tiene proyectos registrados a su nombre. Te sugerimos "Suspender" su acceso en su lugar.'
+      })
+    }
+
+    // 2. Verificar si tiene envíos asociados
+    const tieneEnvios = await Envio.findOne({ where: { id_usuario: id } })
+    if (tieneEnvios) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: 'No se puede eliminar al usuario porque tiene registros de envíos de boletines a su nombre. Te sugerimos "Suspender" su acceso en su lugar.'
+      })
+    }
+
+    // Proceder a eliminar el avatar físico del disco si existe
+    if (usuario.avatar) {
+      const fileSubPath = usuario.avatar.replace(/^\/uploads/, '')
+      const path = require('path')
+      const fs = require('fs')
+      const absolutePath = path.join(__dirname, '..', '..', 'uploads', fileSubPath)
+      try {
+        if (fs.existsSync(absolutePath)) {
+          fs.unlinkSync(absolutePath)
+        }
+      } catch (err) {
+        console.error('[DELETE USUARIO] Error al eliminar archivo de avatar anterior:', err.message)
+      }
+    }
+
+    // Eliminar físicamente de la base de datos
+    await usuario.destroy()
+
+    return res.json({
+      ok: true,
+      mensaje: '✔ Usuario eliminado correctamente del sistema.'
+    })
+  } catch (error) {
+    console.error('[AUTH] Error al eliminar usuario:', error)
+    return res.status(500).json({ ok: false, mensaje: 'Error interno al procesar la eliminación del usuario.' })
+  }
+})
+
 module.exports = router
