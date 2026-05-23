@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Eye, EyeOff, BookOpen, Lock, Mail, AlertCircle, ArrowLeft, Sun, Moon } from 'lucide-react'
 
@@ -28,6 +28,11 @@ export default function Login() {
 
   const { login } = useAuth()
   const navigate  = useNavigate()
+  const location  = useLocation()
+
+  // Detectar si la sesión expiró
+  const queryParams = new URLSearchParams(location.search)
+  const sessionExpired = queryParams.get('session_expired') === 'true'
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -74,6 +79,25 @@ export default function Login() {
           </div>
           <div className="login-title" style={{ fontSize: 20 }}>Acceso al Sistema</div>
         </div>
+
+        {/* Sesión Expirada */}
+        {sessionExpired && !error && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            background: 'rgba(245,158,11,0.12)',
+            border: '1px solid rgba(245,158,11,0.3)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 14px',
+            marginBottom: 16,
+            fontSize: 13,
+            color: '#FDE047',
+          }}>
+            <AlertCircle size={16} style={{ flexShrink: 0, color: '#F59E0B' }} />
+            Tu sesión ha expirado por inactividad o límite de tiempo. Por favor ingresa de nuevo.
+          </div>
+        )}
 
         {/* Error */}
         {error && (

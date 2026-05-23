@@ -24,14 +24,18 @@ api.interceptors.request.use(
 )
 
 // ── Interceptor de Response ───────────────────────────────
-// Si el token expiró (403), redirige al login
+// Si el token expiró o es inválido (401 o 403), limpia y redirige al login
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 403) {
+    const status = error.response?.status
+    if (status === 401 || status === 403) {
       localStorage.removeItem('token')
       localStorage.removeItem('usuario')
-      window.location.href = '/login'
+      // Evitar bucle infinito si ya estamos en la página de login
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login?session_expired=true'
+      }
     }
     return Promise.reject(error)
   }

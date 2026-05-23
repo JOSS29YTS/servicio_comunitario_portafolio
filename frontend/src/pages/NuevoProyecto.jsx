@@ -126,11 +126,43 @@ export default function NuevoProyecto() {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
+    
     setSaving(true)
-    await new Promise(r => setTimeout(r, 1200))
-    setSaving(false)
-    setSuccess(true)
-    setTimeout(() => navigate('/proyectos'), 2200)
+    try {
+      const formData = new FormData()
+      formData.append('titulo', form.nombre.trim())
+      formData.append('anio', form.anio)
+      formData.append('categoria', form.categoria)
+      formData.append('tema', form.tema.trim())
+      formData.append('descripcion_breve', form.descripcion.trim())
+
+      // Filtrar estudiantes vacíos
+      const estudiantesFiltrados = form.estudiantes.map(s => s.trim()).filter(Boolean)
+      formData.append('estudiantes', JSON.stringify(estudiantesFiltrados))
+
+      if (form.archivo) {
+        formData.append('archivo_pdf', form.archivo)
+      }
+
+      const res = await api.post('/proyectos', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      if (res.data?.ok) {
+        setSuccess(true)
+        setTimeout(() => navigate('/proyectos'), 2200)
+      } else {
+        alert(res.data?.mensaje || 'Error al registrar el proyecto en el servidor.')
+      }
+    } catch (error) {
+      console.error('[NUEVO PROYECTO] Error al registrar:', error)
+      const msg = error.response?.data?.mensaje || 'No se pudo conectar con el servidor para registrar el proyecto.'
+      alert(msg)
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (success) return (

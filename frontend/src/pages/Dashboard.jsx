@@ -11,21 +11,54 @@ export default function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
   
-  // Estado local vacío mientras conectamos todo
+  // Estado local para estadísticas reales del backend
   const [stats, setStats] = useState({
     totalProyectos: 0,
-    promocionesDiferentes: 0,
-    categorias: 0,
-    pdfAlmacenados: 0
+    totalPdfs: 0,
+    usuariosActivos: 0,
+    espacioUsadoDiscoBytes: 0,
+    limiteDiscoBytes: 15360 * 1024 * 1024,
+    porcentajeUso: 0
   })
   const [recientes, setRecientes] = useState([])
   const [categoriasLista, setCategoriasLista] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [resStats, resProyectos, resCategorias] = await Promise.all([
+          api.get('/dashboard/stats'),
+          api.get('/proyectos?limit=5'),
+          api.get('/categorias')
+        ])
+
+        if (resStats.data?.ok) {
+          setStats(resStats.data.stats)
+        }
+
+        if (resProyectos.data?.ok) {
+          setRecientes(resProyectos.data.proyectos || [])
+        }
+
+        if (resCategorias.data?.ok) {
+          setCategoriasLista(resCategorias.data.categorias || [])
+        }
+      } catch (err) {
+        console.error('[DASHBOARD] Error al cargar datos del dashboard:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
 
   const statsRender = [
     { label: 'Total Proyectos',         value: stats.totalProyectos,        icon: FolderOpen,   color: 'emerald' },
-    { label: 'Promociones Registradas', value: stats.promocionesDiferentes, icon: TrendingUp,   color: 'orange'  },
-    { label: 'Categorías',              value: stats.categorias,             icon: Tag,          color: 'rose'  },
-    { label: 'PDFs Almacenados',        value: stats.pdfAlmacenados,         icon: FileText,     color: 'blue' },
+    { label: 'PDFs Almacenados',        value: stats.totalPdfs,             icon: FileText,     color: 'blue' },
+    { label: 'Usuarios Activos',        value: stats.usuariosActivos,       icon: Users,        color: 'orange'  },
+    { label: 'Espacio Usado (Drive)',   value: `${(stats.espacioUsadoDiscoBytes / 1024 / 1024).toFixed(1)} MB / 15 GB`, icon: TrendingUp,   color: 'rose'  },
   ]
 
   return (
@@ -119,13 +152,13 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {recientes.map(p => (
-                    <tr key={p.id}>
-                      <td>{p.nombre}</td>
-                      <td>{p.estudiantes.join(', ')}</td>
-                      <td>{p.anio}</td>
-                      <td>{p.categoria}</td>
+                    <tr key={p.id_proyecto}>
+                      <td style={{ fontWeight: 600 }}>{p.titulo}</td>
+                      <td>{p.estudiantes?.map(e => e.nombre_completo).join(', ') || 'Sin autor'}</td>
+                      <td>{p.promocion?.anio || 'N/A'}</td>
+                      <td>{p.categoria?.nombre || 'General'}</td>
                       <td>
-                        <button className="btn btn-primary btn-sm">Ver</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => navigate('/proyectos')}>Ver</button>
                       </td>
                     </tr>
                   ))}
@@ -170,9 +203,9 @@ export default function Dashboard() {
                 </div>
               ) : (
                 categoriasLista.map(cat => (
-                  <div key={cat.id} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>{cat.nombre}</span>
-                    <span>0</span>
+                  <div key={cat.id_categoria || cat.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: 13 }}>
+                    <span style={{ color: 'var(--text-secondary)' }}>{cat.nombre}</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>✓</span>
                   </div>
                 ))
               )}

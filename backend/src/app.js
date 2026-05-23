@@ -37,9 +37,14 @@ app.use(
 
 const bocetoRoutes = require('./routes/boceto.routes')
 const categoriaRoutes = require('./routes/categoria.routes')
+const dashboardRoutes = require('./routes/dashboard.routes')
+const proyectoRoutes = require('./routes/proyecto.routes')
+
 app.use('/api/auth', authRoutes)
 app.use('/api/boceto', bocetoRoutes)
 app.use('/api/categorias', categoriaRoutes)
+app.use('/api/dashboard', dashboardRoutes)
+app.use('/api/proyectos', proyectoRoutes)
 
 // Ruta de salud — verificar que el servidor está corriendo
 app.get('/api/health', (req, res) => {

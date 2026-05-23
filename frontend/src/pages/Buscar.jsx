@@ -14,14 +14,66 @@ const CATEGORIA_COLORS = {
 
 export default function Buscar() {
   const navigate = useNavigate()
-  const [proyectos] = useState([])
-  const [categorias] = useState([])
-  const [aniosDisponibles] = useState([])
+  const [proyectos, setProyectos] = useState([])
+  const [categorias, setCategorias] = useState([])
+  const [aniosDisponibles] = useState([2026, 2025, 2024, 2023, 2022])
+  const [loading, setLoading] = useState(false)
   
   const [busqueda,    setBusqueda]    = useState('')
   const [filterAnio,  setFilterAnio]  = useState('')
   const [filterCat,   setFilterCat]   = useState('')
   const [filterPdf,   setFilterPdf]   = useState(false)
+
+  // Cargar categorías iniciales desde el backend
+  useEffect(() => {
+    const cargarCategorias = async () => {
+      try {
+        const res = await api.get('/categorias')
+        if (res.data?.ok) {
+          setCategorias(res.data.categorias || [])
+        }
+      } catch (err) {
+        console.error('[BUSCADOR] Error al cargar categorías:', err)
+      }
+    }
+    cargarCategorias()
+  }, [])
+
+  // Buscar en el backend de forma reactiva ante cambios con debounce
+  useEffect(() => {
+    const ejecutarBusqueda = async () => {
+      const tieneFiltros = busqueda.trim() !== '' || filterAnio !== '' || filterCat !== '' || filterPdf
+      if (!tieneFiltros) {
+        setProyectos([])
+        return
+      }
+
+      setLoading(true)
+      try {
+        const res = await api.get('/proyectos/buscar', {
+          params: {
+            q: busqueda.trim() || undefined,
+            anio: filterAnio || undefined,
+            categoria: filterCat || undefined,
+            tiene_pdf: filterPdf ? true : undefined
+          }
+        })
+        if (res.data?.ok) {
+          setProyectos(res.data.proyectos || [])
+        }
+      } catch (err) {
+        console.error('[BUSCADOR] Error al buscar proyectos:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const timer = setTimeout(() => {
+      ejecutarBusqueda()
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [busqueda, filterAnio, filterCat, filterPdf])
 
   const activeChips = [
     filterAnio && { key: 'anio', label: `Año: ${filterAnio}`, clear: () => setFilterAnio('') },
@@ -29,17 +81,7 @@ export default function Buscar() {
     filterPdf  && { key: 'pdf',   label: `Solo con PDF`,        clear: () => setFilterPdf(false) },
   ].filter(Boolean)
 
-  const filtered = proyectos.filter(p => {
-    const q = busqueda.toLowerCase()
-    const match = !busqueda ||
-      p.nombre.toLowerCase().includes(q) ||
-      p.estudiantes.some(e => e.toLowerCase().includes(q)) ||
-      p.tema.toLowerCase().includes(q)
-    return match &&
-      (!filterAnio || p.anio === Number(filterAnio)) &&
-      (!filterCat  || p.categoria === filterCat) &&
-      (!filterPdf  || p.tienePdf)
-  })
+  const filtered = proyectos
 
   const hasSearch = busqueda.trim() !== '' || filterAnio !== '' || filterCat !== '' || filterPdf;
 
@@ -74,7 +116,7 @@ export default function Buscar() {
             onChange={e => setFilterCat(e.target.value)}
           >
             <option value="">Todas las categorías</option>
-            {categorias.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
+            {categorias.map(c => <option key={c.id_categoria || c.id} value={c.nombre}>{c.nombre}</option>)}
           </select>
 
           <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-primary)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
@@ -126,48 +168,57 @@ export default function Buscar() {
 
           {filtered.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {filtered.map(p => (
-            <div key={p.id} className="card card-pad search-result-card">
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nombre}</h3>
-                  <span className="badge badge-navy" style={{ fontSize: 11 }}>{p.anio}</span>
-                  <span className={`badge badge-${CATEGORIA_COLORS[p.categoria] || 'navy'}`} style={{ fontSize: 11 }}>
-                    {p.categoria}
-                  </span>
-                </div>
-                
-                <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', marginBottom: 12, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                  {p.descripcion}
-                </p>
-
-                <div style={{ display: 'flex', gap: 16, fontSize: 12.5, color: 'var(--text-muted)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Users size={14} />
-                    {p.estudiantes.join(', ')}
+          {filtered.map(p => {
+            const tienePdf = p.archivos && p.archivos.length > 0;
+            const linkPdf = tienePdf ? `http://localhost:3001${p.archivos[0].ruta_almacenamiento}` : null;
+            const nombreCategoria = p.categoria?.nombre || 'General';
+            
+            return (
+              <div key={p.id_proyecto} className="card card-pad search-result-card">
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{p.titulo}</h3>
+                    <span className="badge badge-navy" style={{ fontSize: 11 }}>{p.promocion?.anio || 'N/A'}</span>
+                    <span className={`badge badge-${CATEGORIA_COLORS[nombreCategoria] || 'navy'}`} style={{ fontSize: 11 }}>
+                      {nombreCategoria}
+                    </span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Tag size={14} />
-                    Tema: {p.tema}
+                  
+                  <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', marginBottom: 12, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {p.descripcion_breve || 'Sin descripción disponible.'}
+                  </p>
+
+                  <div style={{ display: 'flex', gap: 16, fontSize: 12.5, color: 'var(--text-muted)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Users size={14} />
+                      {p.estudiantes?.map(e => e.nombre_completo).join(', ') || 'Sin autor registrado'}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Tag size={14} />
+                      Tema: {p.tema || 'General'}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => navigate('/proyectos')}
-                >
-                  <Eye size={15} /> Ver detalles
-                </button>
-                {p.tienePdf && (
-                  <button className="btn btn-primary">
-                    <Download size={15} /> Descargar PDF
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => navigate('/proyectos')}
+                  >
+                    <Eye size={15} /> Ver detalles
                   </button>
-                )}
+                  {tienePdf && (
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => window.open(linkPdf, '_blank')}
+                    >
+                      <Download size={15} /> Descargar PDF
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="card" style={{ padding: '60px 20px', textAlign: 'center', background: 'var(--bg-card-special)' }}>
