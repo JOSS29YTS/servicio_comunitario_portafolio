@@ -329,7 +329,7 @@ export default function NuevoProyecto() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {bocetoUrl ? (
                   <a 
-                    href={`http://localhost:3001${bocetoUrl}`} 
+                    href={`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}${bocetoUrl}`} 
                     target="_blank" 
                     rel="noreferrer" 
                     className="btn btn-secondary btn-sm"

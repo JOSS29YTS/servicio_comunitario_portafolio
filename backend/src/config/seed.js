@@ -68,7 +68,7 @@ async function seed() {
 
   console.log('\n\x1b[33m⟳\x1b[0m  Insertando usuario administrador...\n')
 
-  const contrasena_hash = await bcrypt.hash('React29d$', 12)
+  const contrasena_hash = await bcrypt.hash('demo123', 12)
 
   // Obtener ID del rol Director
   const rolDirector = await Rol.findOne({ where: { nombre: 'Director' } })
@@ -79,10 +79,10 @@ async function seed() {
   const idEstadoActivo = estadoActivo ? estadoActivo.id_estado : 1
 
   const [usuario, creado] = await Usuario.findOrCreate({
-    where: { email: 'alejandrovilla2912@gmail.com' },
+    where: { email: 'demo@admin.com' },
     defaults: {
-      nombre_completo: 'ALEJANDRO VILLA',
-      email:           'alejandrovilla2912@gmail.com',
+      nombre_completo: 'USUARIO DEMO',
+      email:           'demo@admin.com',
       contrasena_hash,
       id_rol:          idRolDirector,
       id_estado:       idEstadoActivo,
@@ -96,7 +96,7 @@ async function seed() {
     // Si ya existía, actualizar la contraseña y asegurar el rol Director y estado Activo
     await usuario.update({ 
       contrasena_hash, 
-      nombre_completo: 'ALEJANDRO VILLA',
+      nombre_completo: 'USUARIO DEMO',
       id_rol:          idRolDirector,
       id_estado:       idEstadoActivo
     })

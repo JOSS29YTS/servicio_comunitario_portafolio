@@ -146,8 +146,8 @@ El monorepo está organizado de forma intuitiva:
 
 ## 🔑 Usuario Administrador Demo (Semilla)
 Al ejecutar el script de inicialización (`pnpm run db:seed`), se crea la siguiente cuenta de acceso por defecto con privilegios de **Director** para que puedas explorar la plataforma inmediatamente:
-* **Usuario**: `alejandrovilla2912@gmail.com`
-* **Contraseña**: `React29d$`
+* **Usuario**: `demo@admin.com`
+* **Contraseña**: `demo123`
 
 ---
 

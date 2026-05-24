@@ -6,7 +6,9 @@ build/
 uploads/
 /Docs/
 
-# Documentos personales y reportes (Seguridad y Privacidad)
+# Documentos personales, reportes y artefactos de BD (Seguridad y Privacidad)
+*.sql
+*.zip
 *.docx
 *.xlsx
 *.pptx
