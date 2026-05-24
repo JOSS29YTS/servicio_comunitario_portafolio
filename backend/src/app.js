@@ -10,6 +10,7 @@ const path    = require('path')
 
 const { testConnection } = require('./config/database')
 require('./models')   // registra modelos y asociaciones
+require('./config/backupScheduler') // inicializa planificador de respaldos
 
 // Rutas
 const authRoutes = require('./routes/auth.routes')
@@ -29,22 +30,48 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// Servir archivos PDF subidos
+// Servir archivos PDF subidos con soporte robusto de CORS para permitir descargas AJAX/Blob desde el frontend
 app.use(
   '/uploads',
-  express.static(path.join(__dirname, '..', 'uploads'))
+  cors({
+    origin:      process.env.FRONTEND_URL || 'http://localhost:5173',
+    credentials: true,
+    methods:     ['GET', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Content-Disposition', 'Content-Length']
+  }),
+  express.static(path.join(__dirname, '..', 'uploads'), {
+    setHeaders: (res) => {
+      res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:5173');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+  })
 )
+
+// Middleware global para deshabilitar la caché en las respuestas de la API
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 const bocetoRoutes = require('./routes/boceto.routes')
 const categoriaRoutes = require('./routes/categoria.routes')
 const dashboardRoutes = require('./routes/dashboard.routes')
 const proyectoRoutes = require('./routes/proyecto.routes')
+const backupRoutes = require('./routes/backup.routes')
+const boletinRoutes = require('./routes/boletin.routes')
+const estudianteRoutes = require('./routes/estudiante.routes')
 
 app.use('/api/auth', authRoutes)
 app.use('/api/boceto', bocetoRoutes)
 app.use('/api/categorias', categoriaRoutes)
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/proyectos', proyectoRoutes)
+app.use('/api/backup', backupRoutes)
+app.use('/api/boletines', boletinRoutes)
+app.use('/api/estudiantes', estudianteRoutes)
 
 // Ruta de salud — verificar que el servidor está corriendo
 app.get('/api/health', (req, res) => {

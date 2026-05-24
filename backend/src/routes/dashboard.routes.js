@@ -63,6 +63,66 @@ router.get('/stats', authMiddleware, async (req, res) => {
     // Porcentaje de uso
     const porcentajeUso = parseFloat(((espacioUsadoDisco / limiteDiscoBytes) * 100).toFixed(2))
 
+    // 6. Cargar todos los proyectos con Categoria y Promocion para cálculo analítico premium
+    const { Categoria, Promocion } = require('../models')
+    const todosLosProyectos = await Proyecto.findAll({
+      include: [
+        { model: Categoria, as: 'categoria', attributes: ['nombre'] },
+        { model: Promocion, as: 'promocion', attributes: ['anio'] }
+      ]
+    })
+
+    // Agrupación por Categoría y Promoción
+    const catCounts = {}
+    const anioCounts = {}
+    
+    // Inicializar tendencia de carga de los últimos 6 meses cronológicos
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    const tendenciaCounts = {}
+    const hoy = new Date()
+    const ultimosMeses = []
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1)
+      const label = `${meses[d.getMonth()]} ${String(d.getFullYear()).slice(-2)}`
+      ultimosMeses.push(label)
+      tendenciaCounts[label] = 0
+    }
+
+    todosLosProyectos.forEach(p => {
+      const catName = p.categoria?.nombre || 'Otro'
+      const anioVal = p.promocion?.anio || p.anio || 'N/A'
+      
+      catCounts[catName] = (catCounts[catName] || 0) + 1
+      if (anioVal && anioVal !== 'N/A') {
+        anioCounts[anioVal] = (anioCounts[anioVal] || 0) + 1
+      }
+
+      // Tendencia mensual a partir del campo creado_en
+      if (p.creado_en) {
+        const pDate = new Date(p.creado_en)
+        const label = `${meses[pDate.getMonth()]} ${String(pDate.getFullYear()).slice(-2)}`
+        if (tendenciaCounts[label] !== undefined) {
+          tendenciaCounts[label]++
+        }
+      }
+    })
+
+    const proyectosPorCategoria = Object.keys(catCounts).map(name => ({
+      nombre: name,
+      cantidad: catCounts[name]
+    })).sort((a, b) => b.cantidad - a.cantidad)
+
+    const proyectosPorAnio = Object.keys(anioCounts).map(yr => ({
+      anio: Number(yr) || yr,
+      cantidad: anioCounts[yr]
+    })).sort((a, b) => (typeof a.anio === 'number' && typeof b.anio === 'number') ? a.anio - b.anio : 0)
+
+    const tendenciaCarga = ultimosMeses.map(label => ({
+      mes: label,
+      cantidad: tendenciaCounts[label] || 0
+    }))
+
     res.json({
       ok: true,
       stats: {
@@ -73,6 +133,9 @@ router.get('/stats', authMiddleware, async (req, res) => {
         espacioUsadoDiscoBytes: espacioUsadoDisco,
         limiteDiscoBytes,
         porcentajeUso: porcentajeUso > 100 ? 100 : porcentajeUso,
+        proyectosPorCategoria,
+        proyectosPorAnio,
+        tendenciaCarga
       }
     })
   } catch (error) {

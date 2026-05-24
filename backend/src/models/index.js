@@ -13,6 +13,7 @@ const ProyectoEstudiante = require('./ProyectoEstudiante')
 const ArchivoPdf        = require('./ArchivoPdf')
 const Envio             = require('./Envio')
 const DestinatarioEnvio = require('./DestinatarioEnvio')
+const AuditLog          = require('./AuditLog')
 
 // ── ASOCIACIONES ──────────────────────────────────────────
 //
@@ -62,6 +63,10 @@ Envio.belongsTo(Usuario, { foreignKey: 'id_usuario', as: 'usuario' })
 Envio.hasMany(DestinatarioEnvio, { foreignKey: 'id_envio', as: 'destinatarios' })
 DestinatarioEnvio.belongsTo(Envio, { foreignKey: 'id_envio', as: 'envio' })
 
+// Usuario → AuditLog (1:N — un usuario puede generar múltiples registros de auditoría)
+Usuario.hasMany(AuditLog, { foreignKey: 'id_usuario', as: 'logs_auditoria' })
+AuditLog.belongsTo(Usuario, { foreignKey: 'id_usuario', as: 'usuario_detalles' })
+
 // Proyecto <──> Estudiante  (N:M via tabla pivote)
 Proyecto.belongsToMany(Estudiante, {
   through:    ProyectoEstudiante,
@@ -89,4 +94,5 @@ module.exports = {
   ArchivoPdf,
   Envio,
   DestinatarioEnvio,
+  AuditLog,
 }

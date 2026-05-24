@@ -3164,3 +3164,27 @@ input:checked+.slider:before {
     display: block !important;
   }
 }
+
+/* Spinner Animation for Backup and Loading states */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Lazy Loading Transition Effects */
+.lazy-image {
+  opacity: 0;
+  transition: opacity 0.35s ease-in-out;
+}
+
+.lazy-image.loaded {
+  opacity: 1;
+}

@@ -13,15 +13,21 @@ const jwt      = require('jsonwebtoken')
 const { body, validationResult } = require('express-validator')
 const fs       = require('fs')
 const path     = require('path')
+const crypto   = require('crypto')
 
 const { Usuario, Rol, Estado } = require('../models')
 const authMiddleware = require('../middlewares/auth')
+const checkRole      = require('../middlewares/checkRole')
+const { authLimiter } = require('../middlewares/rateLimiter')
+const { sendRecoveryEmail } = require('../utils/emailService')
+const { registrarAccion } = require('../services/auditService')
 
 const router = express.Router()
 
 // ── POST /api/auth/login ──────────────────────────────────
 router.post(
   '/login',
+  authLimiter,
   [
     body('email')
       .isEmail().withMessage('Ingresa un correo electrónico válido.'),
@@ -51,6 +57,7 @@ router.post(
       })
 
       if (!usuario) {
+        await registrarAccion(req, 'LOGIN_FALLIDO', `Intento de inicio de sesión con correo no registrado`, { email })
         return res.status(401).json({
           ok:      false,
           mensaje: 'Credenciales incorrectas. Verifica tu correo y contraseña.',
@@ -60,6 +67,7 @@ router.post(
       // Verificar contraseña
       const passwordValida = await bcrypt.compare(password, usuario.contrasena_hash)
       if (!passwordValida) {
+        await registrarAccion(req, 'LOGIN_FALLIDO', `Contraseña incorrecta intentada para usuario: ${email}`, { id_usuario: usuario.id_usuario, email })
         return res.status(401).json({
           ok:      false,
           mensaje: 'Credenciales incorrectas. Verifica tu correo y contraseña.',
@@ -68,6 +76,7 @@ router.post(
 
       // Capa de Seguridad: Bloquear el acceso si el estado no es 'Activo'
       if (usuario.estado && usuario.estado.estado !== 'Activo') {
+        await registrarAccion(req, 'LOGIN_BLOQUEADO', `Intento de acceso bloqueado. Estado: ${usuario.estado.estado}`, { id_usuario: usuario.id_usuario, email, estado: usuario.estado.estado })
         return res.status(403).json({
           ok:      false,
           mensaje: `Tu cuenta está en estado '${usuario.estado.estado}'. Por favor, espera a que la Dirección apruebe tu registro antes de ingresar.`,
@@ -87,6 +96,9 @@ router.post(
       const token = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN || '8h',
       })
+
+      // Registrar auditoría de Login Exitoso
+      await registrarAccion({ usuario: { id_usuario: usuario.id_usuario, nombre_completo: usuario.nombre_completo, email: usuario.email }, ip: req.ip, headers: req.headers, socket: req.socket }, 'LOGIN_EXITOSO', `Inicio de sesión exitoso. Rol: ${usuario.rol?.nombre || 'Sin Rol'}`)
 
       return res.status(200).json({
         ok: true,
@@ -116,6 +128,7 @@ router.post(
 // ── POST /api/auth/registro ───────────────────────────────
 router.post(
   '/registro',
+  authLimiter,
   [
     body('nombre_completo').notEmpty().withMessage('El nombre es requerido.'),
     body('email').isEmail().withMessage('Ingresa un correo electrónico válido.'),
@@ -164,6 +177,9 @@ router.post(
         ]
       })
 
+      // Registrar auditoría de solicitud de registro
+      await registrarAccion(req, 'REGISTRO_SOLICITADO', `Registro de cuenta solicitado por nuevo usuario: ${nombre_completo} (${email})`, { id_usuario_creado: usuario.id_usuario, rol: usuario.rol?.nombre })
+
       // Como la cuenta está en estado 'Pendiente', no entregamos token de acceso inmediato
       return res.status(201).json({
         ok: true,
@@ -181,6 +197,117 @@ router.post(
     } catch (error) {
       console.error('[AUTH] Error en registro:', error)
       return res.status(500).json({ ok: false, mensaje: 'Error interno del servidor.' })
+    }
+  }
+)
+
+// ── POST /api/auth/recuperar-clave ────────────────────────
+router.post(
+  '/recuperar-clave',
+  authLimiter,
+  [
+    body('email').isEmail().withMessage('Ingresa un correo electrónico válido.')
+  ],
+  async (req, res) => {
+    const errores = validationResult(req)
+    if (!errores.isEmpty()) {
+      return res.status(400).json({ ok: false, errores: errores.array().map(e => e.msg) })
+    }
+
+    const { email } = req.body
+
+    try {
+      const usuario = await Usuario.findOne({ where: { email } })
+      if (!usuario) {
+        // Respuesta genérica para evitar enumeración de cuentas
+        await registrarAccion(req, 'RECUPERACION_SOLICITADA_FALLIDA', `Intento de recuperación para correo no registrado: ${email}`)
+        return res.json({
+          ok: true,
+          mensaje: 'Si tu correo electrónico está registrado en el repositorio, recibirás un enlace de recuperación en los próximos minutos.'
+        })
+      }
+
+      // Generar token criptográfico seguro
+      const token = crypto.randomBytes(32).toString('hex')
+      const expiracion = new Date(Date.now() + 60 * 60 * 1000) // 1 hora de validez
+
+      await usuario.update({
+        token_recuperacion: token,
+        expiracion_recuperacion: expiracion
+      })
+
+      // Enviar correo
+      await sendRecoveryEmail(usuario.email, usuario.nombre_completo, token)
+
+      await registrarAccion(req, 'RECUPERACION_SOLICITADA', `Enlace de recuperación de clave enviado al correo: ${email}`, { id_usuario_solicitante: usuario.id_usuario })
+
+      return res.json({
+        ok: true,
+        mensaje: 'Si tu correo electrónico está registrado en el repositorio, recibirás un enlace de recuperación en los próximos minutos.'
+      })
+    } catch (error) {
+      console.error('[AUTH] Error en recuperar-clave:', error)
+      return res.status(500).json({ ok: false, mensaje: 'Error interno al procesar tu solicitud.' })
+    }
+  }
+)
+
+// ── POST /api/auth/restablecer-clave ──────────────────────
+router.post(
+  '/restablecer-clave',
+  authLimiter,
+  [
+    body('email').isEmail().withMessage('Ingresa un correo electrónico válido.'),
+    body('token').notEmpty().withMessage('El token de seguridad es requerido.'),
+    body('password').isLength({ min: 6 }).withMessage('La nueva contraseña debe tener al menos 6 caracteres.')
+  ],
+  async (req, res) => {
+    const errores = validationResult(req)
+    if (!errores.isEmpty()) {
+      return res.status(400).json({ ok: false, errores: errores.array().map(e => e.msg) })
+    }
+
+    const { email, token, password } = req.body
+
+    try {
+      const { Op } = require('sequelize')
+      const usuario = await Usuario.findOne({
+        where: {
+          email,
+          token_recuperacion: token,
+          expiracion_recuperacion: {
+            [Op.gt]: new Date()
+          }
+        }
+      })
+
+      if (!usuario) {
+        await registrarAccion(req, 'RESTABLECIMIENTO_FALLIDO', `Token inválido o expirado para el correo: ${email}`)
+        return res.status(400).json({
+          ok: false,
+          mensaje: 'El token de seguridad es inválido o ha expirado. Por favor, solicita un nuevo enlace de recuperación.'
+        })
+      }
+
+      // Hashear nueva contraseña
+      const contrasena_hash = await bcrypt.hash(password, 10)
+
+      // Limpiar token
+      await usuario.update({
+        contrasena_hash,
+        token_recuperacion: null,
+        expiracion_recuperacion: null
+      })
+
+      await registrarAccion({ usuario: { id_usuario: usuario.id_usuario, nombre_completo: usuario.nombre_completo, email: usuario.email }, ip: req.ip, headers: req.headers, socket: req.socket }, 'RESTABLECIMIENTO_EXITOSO', 'Contraseña restablecida de forma segura')
+
+      return res.json({
+        ok: true,
+        mensaje: '✔ Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tus nuevas credenciales.'
+      })
+    } catch (error) {
+      console.error('[AUTH] Error en restablecer-clave:', error)
+      return res.status(500).json({ ok: false, mensaje: 'Error interno en el servidor.' })
     }
   }
 )
@@ -471,19 +598,8 @@ router.delete('/avatar', authMiddleware, async (req, res) => {
 
 // ── GET /api/auth/usuarios ───────────────────────────────
 // Obtener todos los usuarios de la base de datos (Protegido, solo Director/Subdirector)
-router.get('/usuarios', authMiddleware, async (req, res) => {
+router.get('/usuarios', authMiddleware, checkRole(['Director', 'Subdirector']), async (req, res) => {
   try {
-    // Verificar que el usuario solicitante sea Director o Subdirector
-    const usuarioSolicitante = await Usuario.findByPk(req.usuario.id_usuario, {
-      include: [{ model: Rol, as: 'rol' }]
-    })
-
-    if (!usuarioSolicitante || (usuarioSolicitante.rol?.nombre !== 'Director' && usuarioSolicitante.rol?.nombre !== 'Subdirector')) {
-      return res.status(403).json({
-        ok: false,
-        mensaje: 'Acceso denegado. No tienes permisos de administración.'
-      })
-    }
 
     const usuarios = await Usuario.findAll({
       attributes: ['id_usuario', 'nombre_completo', 'email', 'telefono', 'avatar', 'creado_en', 'ultima_conexion'],
@@ -529,7 +645,7 @@ router.get('/usuarios', authMiddleware, async (req, res) => {
 
 // ── GET /api/auth/roles ──────────────────────────────────
 // Obtener todos los roles disponibles (Protegido, solo Director/Subdirector)
-router.get('/roles', authMiddleware, async (req, res) => {
+router.get('/roles', authMiddleware, checkRole(['Director', 'Subdirector']), async (req, res) => {
   try {
     const roles = await Rol.findAll({ order: [['id_rol', 'ASC']] })
     return res.json({ ok: true, roles })
@@ -541,7 +657,7 @@ router.get('/roles', authMiddleware, async (req, res) => {
 
 // ── GET /api/auth/estados ────────────────────────────────
 // Obtener todos los estados de cuenta disponibles (Protegido, solo Director/Subdirector)
-router.get('/estados', authMiddleware, async (req, res) => {
+router.get('/estados', authMiddleware, checkRole(['Director', 'Subdirector']), async (req, res) => {
   try {
     const estados = await Estado.findAll({ order: [['id_estado', 'ASC']] })
     return res.json({ ok: true, estados })
@@ -553,23 +669,11 @@ router.get('/estados', authMiddleware, async (req, res) => {
 
 // ── PUT /api/auth/usuarios/:id/rol ───────────────────────
 // Actualizar el rol de un usuario (Protegido, solo Director/Subdirector)
-router.put('/usuarios/:id/rol', authMiddleware, async (req, res) => {
+router.put('/usuarios/:id/rol', authMiddleware, checkRole(['Director', 'Subdirector']), async (req, res) => {
   const { id } = req.params
   const { id_rol } = req.body
 
   try {
-    // Validar permisos del solicitante
-    const usuarioSolicitante = await Usuario.findByPk(req.usuario.id_usuario, {
-      include: [{ model: Rol, as: 'rol' }]
-    })
-
-    if (!usuarioSolicitante || (usuarioSolicitante.rol?.nombre !== 'Director' && usuarioSolicitante.rol?.nombre !== 'Subdirector')) {
-      return res.status(403).json({
-        ok: false,
-        mensaje: 'Acceso denegado. No tienes permisos de administración.'
-      })
-    }
-
     // Validar que el rol existe
     const rolExiste = await Rol.findByPk(id_rol)
     if (!rolExiste) {
@@ -584,7 +688,7 @@ router.put('/usuarios/:id/rol', authMiddleware, async (req, res) => {
 
     // Impedir que un Subdirector cambie el rol de un Director
     const usuarioRolActual = await Rol.findByPk(usuario.id_rol)
-    if (usuarioSolicitante.rol.nombre === 'Subdirector' && usuarioRolActual?.nombre === 'Director') {
+    if (req.usuario.rol === 'Subdirector' && usuarioRolActual?.nombre === 'Director') {
       return res.status(403).json({
         ok: false,
         mensaje: 'No tienes permisos para modificar el rol de un Director.'
@@ -600,6 +704,9 @@ router.put('/usuarios/:id/rol', authMiddleware, async (req, res) => {
         { model: Estado, as: 'estado', attributes: ['id_estado', 'estado'] }
       ]
     })
+
+    // Registrar auditoría de cambio de rol
+    await registrarAccion(req, 'CAMBIO_ROL_USUARIO', `Rol de usuario ${usuarioActualizado.nombre_completo} actualizado a '${usuarioActualizado.rol?.nombre || 'Sin Rol'}'.`, { id_usuario_afectado: id, nuevo_rol: usuarioActualizado.rol?.nombre })
 
     return res.json({
       ok: true,
@@ -624,23 +731,11 @@ router.put('/usuarios/:id/rol', authMiddleware, async (req, res) => {
 
 // ── PUT /api/auth/usuarios/:id/estado ────────────────────
 // Actualizar el estado de cuenta de un usuario (Protegido, solo Director/Subdirector)
-router.put('/usuarios/:id/estado', authMiddleware, async (req, res) => {
+router.put('/usuarios/:id/estado', authMiddleware, checkRole(['Director', 'Subdirector']), async (req, res) => {
   const { id } = req.params
   const { id_estado } = req.body
 
   try {
-    // Validar permisos del solicitante
-    const usuarioSolicitante = await Usuario.findByPk(req.usuario.id_usuario, {
-      include: [{ model: Rol, as: 'rol' }]
-    })
-
-    if (!usuarioSolicitante || (usuarioSolicitante.rol?.nombre !== 'Director' && usuarioSolicitante.rol?.nombre !== 'Subdirector')) {
-      return res.status(403).json({
-        ok: false,
-        mensaje: 'Acceso denegado. No tienes permisos de administración.'
-      })
-    }
-
     // Validar que el estado existe
     const estadoExiste = await Estado.findByPk(id_estado)
     if (!estadoExiste) {
@@ -655,7 +750,7 @@ router.put('/usuarios/:id/estado', authMiddleware, async (req, res) => {
 
     // Impedir que un Subdirector cambie el estado de un Director
     const usuarioRolActual = await Rol.findByPk(usuario.id_rol)
-    if (usuarioSolicitante.rol.nombre === 'Subdirector' && usuarioRolActual?.nombre === 'Director') {
+    if (req.usuario.rol === 'Subdirector' && usuarioRolActual?.nombre === 'Director') {
       return res.status(403).json({
         ok: false,
         mensaje: 'No tienes permisos para modificar el estado de un Director.'
@@ -676,6 +771,9 @@ router.put('/usuarios/:id/estado', authMiddleware, async (req, res) => {
         { model: Estado, as: 'estado', attributes: ['id_estado', 'estado'] }
       ]
     })
+
+    // Registrar auditoría de cambio de estado
+    await registrarAccion(req, 'CAMBIO_ESTADO_CUENTA', `Estado de cuenta de ${usuarioActualizado.nombre_completo} cambiado a '${estadoExiste.estado}'.`, { id_usuario_afectado: id, nuevo_estado: estadoExiste.estado })
 
     return res.json({
       ok: true,
@@ -700,22 +798,10 @@ router.put('/usuarios/:id/estado', authMiddleware, async (req, res) => {
 
 // ── DELETE /api/auth/usuarios/:id ────────────────────────
 // Eliminar un usuario (Protegido, solo Director/Subdirector con validación de dependencias)
-router.delete('/usuarios/:id', authMiddleware, async (req, res) => {
+router.delete('/usuarios/:id', authMiddleware, checkRole(['Director', 'Subdirector']), async (req, res) => {
   const { id } = req.params
 
   try {
-    // Validar permisos del solicitante
-    const usuarioSolicitante = await Usuario.findByPk(req.usuario.id_usuario, {
-      include: [{ model: Rol, as: 'rol' }]
-    })
-
-    if (!usuarioSolicitante || (usuarioSolicitante.rol?.nombre !== 'Director' && usuarioSolicitante.rol?.nombre !== 'Subdirector')) {
-      return res.status(403).json({
-        ok: false,
-        mensaje: 'Acceso denegado. No tienes permisos de administración.'
-      })
-    }
-
     // Impedir eliminarse a uno mismo
     if (parseInt(id) === req.usuario.id_usuario) {
       return res.status(400).json({ ok: false, mensaje: 'No puedes eliminar tu propia cuenta.' })
@@ -729,7 +815,7 @@ router.delete('/usuarios/:id', authMiddleware, async (req, res) => {
 
     // Impedir que un Subdirector elimine a un Director o a otro Subdirector
     const usuarioRolActual = await Rol.findByPk(usuario.id_rol)
-    if (usuarioSolicitante.rol.nombre === 'Subdirector' && 
+    if (req.usuario.rol === 'Subdirector' && 
         (usuarioRolActual?.nombre === 'Director' || usuarioRolActual?.nombre === 'Subdirector')) {
       return res.status(403).json({
         ok: false,
@@ -774,6 +860,9 @@ router.delete('/usuarios/:id', authMiddleware, async (req, res) => {
 
     // Eliminar físicamente de la base de datos
     await usuario.destroy()
+
+    // Registrar auditoría de eliminación de usuario
+    await registrarAccion(req, 'ELIMINAR_USUARIO', `Usuario eliminado permanentemente: ${usuario.nombre_completo} (${usuario.email})`, { id_usuario_eliminado: id, nombre: usuario.nombre_completo, email: usuario.email })
 
     return res.json({
       ok: true,

@@ -138,10 +138,20 @@ export default function Login() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">
-              <Lock size={13} style={{ display:'inline', marginRight:4, verticalAlign:'middle' }} />
-              Contraseña
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <label className="form-label" style={{ margin: 0 }}>
+                <Lock size={13} style={{ display:'inline', marginRight:4, verticalAlign:'middle' }} />
+                Contraseña
+              </label>
+              <span
+                onClick={() => navigate('/recuperar-clave')}
+                style={{ fontSize: '12.5px', color: 'var(--indigo-400)', cursor: 'pointer', fontWeight: 500, transition: 'color 0.2s' }}
+                onMouseEnter={e => e.target.style.color = 'var(--indigo-300)'}
+                onMouseLeave={e => e.target.style.color = 'var(--indigo-400)'}
+              >
+                ¿Olvidaste tu contraseña?
+              </span>
+            </div>
             <div style={{ position: 'relative' }}>
               <input
                 id="login-password"

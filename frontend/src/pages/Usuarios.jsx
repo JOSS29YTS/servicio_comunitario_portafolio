@@ -292,11 +292,14 @@ export default function Usuarios() {
                     <tr key={u.id}>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div className="user-avatar" style={{ width: 32, height: 32, fontSize: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div className="user-avatar" style={{ width: 32, height: 32, fontSize: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--navy-800)' }}>
                             {u.avatar ? (
                               <img 
                                 src={`${backendUrl}${u.avatar}`} 
                                 alt="Avatar" 
+                                className="lazy-image"
+                                loading="lazy"
+                                onLoad={(e) => e.target.classList.add('loaded')}
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                               />
                             ) : (
@@ -389,11 +392,14 @@ export default function Usuarios() {
               <div key={u.id} className="card card-pad" style={{ background: 'var(--bg-card-special)', marginBottom: 16, overflow: 'visible', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div className="user-avatar" style={{ width: 40, height: 40, fontSize: 14, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="user-avatar" style={{ width: 40, height: 40, fontSize: 14, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--navy-800)' }}>
                       {u.avatar ? (
                         <img 
                           src={`${backendUrl}${u.avatar}`} 
                           alt="Avatar" 
+                          className="lazy-image"
+                          loading="lazy"
+                          onLoad={(e) => e.target.classList.add('loaded')}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
                         />
                       ) : (

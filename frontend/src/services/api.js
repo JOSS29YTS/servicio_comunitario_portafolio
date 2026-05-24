@@ -41,4 +41,41 @@ api.interceptors.response.use(
   }
 )
 
+export const descargarArchivo = async (rutaRelativa, nombreArchivoDescarga = 'archivo.pdf') => {
+  try {
+    // Si la ruta ya incluye el dominio completo, extraemos solo la parte del path
+    let url = rutaRelativa;
+    if (rutaRelativa.startsWith('http://') || rutaRelativa.startsWith('https://')) {
+      const parsedUrl = new URL(rutaRelativa);
+      url = parsedUrl.pathname;
+    }
+
+    const response = await api.get(url, {
+      responseType: 'blob',
+      // Evitar timeouts largos para descargas
+      timeout: 30000 
+    });
+
+    // Crear un blob temporal
+    const blob = new Blob([response.data], { type: response.headers['content-type'] || 'application/pdf' });
+    const blobUrl = window.URL.createObjectURL(blob);
+    
+    // Crear elemento <a> invisible para disparar la descarga
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = nombreArchivoDescarga;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Limpieza
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+    
+    return true;
+  } catch (error) {
+    console.error('[API] Error al intentar descargar el archivo:', error);
+    throw error;
+  }
+};
+
 export default api

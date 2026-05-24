@@ -7,6 +7,9 @@ const express = require('express')
 const router  = express.Router()
 const fs      = require('fs')
 const path    = require('path')
+const authMiddleware = require('../middlewares/auth')
+const checkRole      = require('../middlewares/checkRole')
+const { registrarAccion } = require('../services/auditService')
 
 const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads')
 const FILE_PATH   = path.join(UPLOADS_DIR, 'boceto_reglas.pdf')
@@ -29,8 +32,8 @@ router.get('/', (req, res) => {
   }
 })
 
-// POST /api/boceto — Cargar/Actualizar boceto PDF en Base64
-router.post('/', (req, res) => {
+// POST /api/boceto — Cargar/Actualizar boceto PDF en Base64 (Protegido, solo Director/Subdirector)
+router.post('/', authMiddleware, checkRole(['Director', 'Subdirector']), async (req, res) => {
   try {
     const { fileData } = req.body
     if (!fileData) {
@@ -50,6 +53,9 @@ router.post('/', (req, res) => {
 
     // Escribir el buffer binario en disco
     fs.writeFileSync(FILE_PATH, base64Data, 'base64')
+
+    // Registrar auditoría de actualización de pautas
+    await registrarAccion(req, 'ACTUALIZAR_BOCETO_REGLAS', 'Se cargó o actualizó el archivo PDF oficial con las reglas y pautas de investigación escolar.')
 
     res.json({
       ok:      true,

@@ -4,8 +4,7 @@ node_modules/
 dist/
 build/
 uploads/
-Docs/backup.sql
-Docs/backup.txt
+/Docs/
 
 # Documentos personales y reportes (Seguridad y Privacidad)
 *.docx

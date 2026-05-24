@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Trash2, FileText, CheckCircle,
   User, Upload, ChevronRight
@@ -19,10 +19,14 @@ const CAMPOS_VACIO = {
 
 export default function NuevoProyecto() {
   const navigate  = useNavigate()
+  const { id }    = useParams()
   const fileRef   = useRef()
   const { user }  = useAuth()
   
-  const [form, setForm]         = useState(CAMPOS_VACIO)
+  const [form, setForm]         = useState({
+    ...CAMPOS_VACIO,
+    archivoExistenteNombre: null
+  })
   const [dragOver, setDragOver] = useState(false)
   const [errors, setErrors]     = useState({})
   const [success, setSuccess]   = useState(false)
@@ -35,7 +39,7 @@ export default function NuevoProyecto() {
   const [bocetoUrl, setBocetoUrl] = useState(null)
   const [uploadingBoceto, setUploadingBoceto] = useState(false)
 
-  // Cargar estado inicial del boceto y las categorías al montar el componente
+  // Cargar estado inicial del boceto, las categorías y los datos previos si es edición
   useEffect(() => {
     const cargarDatosIniciales = async () => {
       try {
@@ -50,12 +54,30 @@ export default function NuevoProyecto() {
         if (resCat.data?.ok) {
           setCategoriasLista(resCat.data.categorias || [])
         }
+
+        // Si hay un id, estamos en modo Edición → Cargar el proyecto del backend
+        if (id) {
+          const resProyecto = await api.get(`/proyectos/${id}`)
+          if (resProyecto.data?.ok) {
+            const p = resProyecto.data.proyecto
+            setForm({
+              nombre: p.titulo || '',
+              anio: p.promocion?.anio || p.anio || '',
+              categoria: p.categoria?.nombre || p.categoria || '',
+              tema: p.tema || '',
+              descripcion: p.descripcion_breve || p.descripcion || '',
+              estudiantes: p.estudiantes?.map(e => e.nombre_completo) || [''],
+              archivo: null,
+              archivoExistenteNombre: p.archivos && p.archivos.length > 0 ? p.archivos[0].nombre_archivo : null
+            })
+          }
+        }
       } catch (err) {
         console.error('Error al cargar datos iniciales:', err)
       }
     }
     cargarDatosIniciales()
-  }, [])
+  }, [id])
 
   // Subir/Actualizar boceto PDF en Base64
   const handleBocetoUpload = async (e) => {
@@ -144,21 +166,30 @@ export default function NuevoProyecto() {
         formData.append('archivo_pdf', form.archivo)
       }
 
-      const res = await api.post('/proyectos', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      })
+      let res
+      if (id) {
+        res = await api.put(`/proyectos/${id}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+      } else {
+        res = await api.post('/proyectos', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+      }
 
       if (res.data?.ok) {
         setSuccess(true)
         setTimeout(() => navigate('/proyectos'), 2200)
       } else {
-        alert(res.data?.mensaje || 'Error al registrar el proyecto en el servidor.')
+        alert(res.data?.mensaje || 'Error al guardar el proyecto en el servidor.')
       }
     } catch (error) {
-      console.error('[NUEVO PROYECTO] Error al registrar:', error)
-      const msg = error.response?.data?.mensaje || 'No se pudo conectar con el servidor para registrar el proyecto.'
+      console.error('[NUEVO PROYECTO] Error al guardar:', error)
+      const msg = error.response?.data?.mensaje || 'No se pudo conectar con el servidor para guardar el proyecto.'
       alert(msg)
     } finally {
       setSaving(false)
@@ -177,10 +208,10 @@ export default function NuevoProyecto() {
         <CheckCircle size={44} />
       </div>
       <h2 style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy-900)', marginBottom: 8 }}>
-        ¡Proyecto Registrado!
+        {id ? '¡Proyecto Actualizado!' : '¡Proyecto Registrado!'}
       </h2>
       <p style={{ fontSize: 14, color: 'var(--navy-500)', marginBottom: 24, textAlign: 'center', maxWidth: 360 }}>
-        El proyecto ha sido guardado exitosamente en el repositorio académico.
+        {id ? 'El proyecto ha sido modificado y guardado exitosamente.' : 'El proyecto ha sido guardado exitosamente en el repositorio académico.'}
       </p>
       <p style={{ fontSize: 13, color: 'var(--navy-400)' }}>Redirigiendo a proyectos...</p>
     </div>
@@ -192,13 +223,13 @@ export default function NuevoProyecto() {
       <div className="breadcrumb">
         <span>Proyectos</span>
         <ChevronRight size={13} className="breadcrumb-sep" />
-        <span className="breadcrumb-current">Nuevo Proyecto</span>
+        <span className="breadcrumb-current">{id ? 'Editar Proyecto' : 'Nuevo Proyecto'}</span>
       </div>
 
       <div className="page-header">
         <div className="page-header-left">
-          <h2>Registrar Nuevo Proyecto</h2>
-          <p>Completa los datos del proyecto de investigación estudiantil</p>
+          <h2>{id ? 'Editar Proyecto Estudiantil' : 'Registrar Nuevo Proyecto'}</h2>
+          <p>{id ? 'Modifica los datos del proyecto de investigación seleccionado' : 'Completa los datos del proyecto de investigación estudiantil'}</p>
         </div>
         <button className="btn btn-secondary" onClick={() => navigate('/proyectos')}>
           <ArrowLeft size={15} />
@@ -430,6 +461,24 @@ export default function NuevoProyecto() {
                 <Trash2 size={14} /> Quitar
               </button>
             </div>
+          ) : form.archivoExistenteNombre ? (
+            <div className="file-selected" style={{ background: 'rgba(99,102,241,0.05)', borderColor: 'var(--indigo-200)' }}>
+              <FileText size={20} color="var(--indigo-500)" />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{form.archivoExistenteNombre}</div>
+                <div style={{ fontSize: 11.5, color: 'var(--indigo-500)', fontWeight: 500 }}>
+                  PDF registrado previamente. Haz clic abajo si deseas reemplazarlo.
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => fileRef.current?.click()}
+                style={{ color: 'var(--indigo-600)' }}
+              >
+                Reemplazar PDF
+              </button>
+            </div>
           ) : (
             <div
               className={`drop-zone${dragOver ? ' drag-over' : ''}`}
@@ -443,17 +492,18 @@ export default function NuevoProyecto() {
               </div>
               <div className="drop-zone-title">Arrastra el PDF aquí o haz clic para seleccionar</div>
               <div className="drop-zone-sub">Solo archivos PDF · Máximo 20 MB</div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".pdf"
-                onChange={e => handleFile(e.target.files[0])}
-                style={{ display: 'none' }}
-              />
             </div>
           )}
+          
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf"
+            onChange={e => handleFile(e.target.files[0])}
+            style={{ display: 'none' }}
+          />
           <p className="form-hint" style={{ marginTop: 8 }}>
-            El PDF es opcional en este momento. Puedes cargarlo más tarde desde la lista de proyectos.
+            El PDF es opcional en este momento. {id ? 'Si no subes uno nuevo, se conservará el ya registrado.' : 'Puedes cargarlo más tarde desde la lista de proyectos.'}
           </p>
         </div>
 
@@ -484,7 +534,7 @@ export default function NuevoProyecto() {
             ) : (
               <>
                 <CheckCircle size={16} />
-                Guardar Proyecto
+                {id ? 'Guardar Cambios' : 'Guardar Proyecto'}
               </>
             )}
           </button>

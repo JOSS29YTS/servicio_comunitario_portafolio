@@ -53,6 +53,11 @@ const Proyecto = sequelize.define('Proyecto', {
     defaultValue: DataTypes.NOW,
     comment:      'Fecha de registro del proyecto en el sistema',
   },
+  resumen_ia: {
+    type:         DataTypes.TEXT,
+    allowNull:    true,
+    comment:      'Resumen estructurado y metadatos extraídos por IA (Gemini)',
+  },
 }, {
   tableName:  'proyecto',
   timestamps: false,

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { 
   Settings, User, Database, Shield, Camera, 
   Key, Bell, Globe, Activity, HardDrive, 
-  FileText, Users, Mail, ExternalLink, RefreshCw
+  FileText, Users, Mail, ExternalLink, RefreshCw, X
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
@@ -14,16 +14,94 @@ export default function Configuracion() {
   const [telefono, setTelefono] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [backupInfo, setBackupInfo] = useState(null)
+  const [syncLoading, setSyncLoading] = useState(false)
   const fileInputRef = useRef(null)
+
+  // Estados para Cambiar Contraseña
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [contrasenaActual, setContrasenaActual] = useState('')
+  const [contrasenaNueva, setContrasenaNueva] = useState('')
+  const [confirmarContrasena, setConfirmarContrasena] = useState('')
+  const [passwordLoading, setPasswordLoading] = useState(false)
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    if (!contrasenaActual || !contrasenaNueva || !confirmarContrasena) {
+      alert('Por favor, completa todos los campos.')
+      return
+    }
+    if (contrasenaNueva.length < 6) {
+      alert('La nueva contraseña debe tener al menos 6 caracteres.')
+      return
+    }
+    if (contrasenaNueva !== confirmarContrasena) {
+      alert('La nueva contraseña y su confirmación no coinciden.')
+      return
+    }
+
+    setPasswordLoading(true)
+    try {
+      const { data } = await api.put('/auth/cambiar-contrasena', {
+        contrasena_actual: contrasenaActual,
+        contrasena_nueva: contrasenaNueva
+      })
+      if (data.ok) {
+        alert(data.mensaje || '✔ Contraseña cambiada exitosamente.')
+        // Resetear campos
+        setContrasenaActual('')
+        setContrasenaNueva('')
+        setConfirmarContrasena('')
+        setShowPasswordModal(false)
+      }
+    } catch (error) {
+      console.error('Error al cambiar contraseña:', error)
+      const msg = error.response?.data?.mensaje || error.response?.data?.errores?.[0] || 'Error al intentar cambiar la contraseña.'
+      alert(msg)
+    } finally {
+      setPasswordLoading(false)
+    }
+  }
 
   const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
-  // Sincronizar el teléfono con los datos cargados del usuario
+  const loadLastBackup = async () => {
+    try {
+      const { data } = await api.get('/backup/last')
+      if (data.ok && data.backup) {
+        setBackupInfo(data.backup)
+      }
+    } catch (error) {
+      console.error('Error al obtener info del último respaldo:', error)
+    }
+  }
+
+  // Sincronizar el teléfono con los datos cargados del usuario y obtener respaldo
   useEffect(() => {
     if (user) {
       setTelefono(user.telefono || '')
+      loadLastBackup()
     }
   }, [user])
+
+  const handleForceSync = async () => {
+    if (window.confirm('¿Deseas iniciar una sincronización y respaldo completo de la base de datos y archivos? Esto podría tomar unos segundos.')) {
+      setSyncLoading(true)
+      try {
+        const { data } = await api.post('/backup/sincronizar')
+        if (data.ok) {
+          setBackupInfo(data.backup)
+          alert(data.mensaje || 'Respaldo manual completado exitosamente.')
+        }
+      } catch (error) {
+        console.error('Error al forzar sincronización:', error)
+        const msg = error.response?.data?.mensaje || 'Error al iniciar la sincronización y respaldo.'
+        alert(msg)
+      } finally {
+        setSyncLoading(false)
+      }
+    }
+  }
 
   const toggleNotifications = async () => {
     if (!notifEnabled) {
@@ -266,7 +344,7 @@ export default function Configuracion() {
               </div>
             </div>
             
-            <button className="btn btn-ghost" style={{ marginTop: 24, width: '100%', justifyContent: 'center', gap: 8 }}>
+            <button className="btn btn-ghost" onClick={() => setShowPasswordModal(true)} style={{ marginTop: 24, width: '100%', justifyContent: 'center', gap: 8 }}>
               <Key size={16} /> Cambiar Contraseña
             </button>
           </div>
@@ -356,14 +434,35 @@ export default function Configuracion() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>Último Respaldo</div>
-                    <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>Pendiente de primer respaldo</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>
+                      {backupInfo ? new Date(backupInfo.ultima_fecha).toLocaleString('es-VE', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+                      }) : 'Pendiente de primer respaldo'}
+                    </div>
+                    {backupInfo && (
+                      <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 4, fontFamily: 'monospace' }}>
+                        {backupInfo.nombre_archivo} ({(backupInfo.tamano_bytes / 1024).toFixed(1)} KB)
+                      </div>
+                    )}
                   </div>
-                  <div style={{ color: 'var(--indigo-500)' }}>
+                  <div style={{ color: 'var(--indigo-500)' }} className={syncLoading ? 'animate-spin' : ''}>
                     <RefreshCw size={18} />
                   </div>
                 </div>
-                <button className="btn btn-primary btn-sm" style={{ width: '100%', justifyContent: 'center' }}>
-                   Forzar Sincronización
+                <button 
+                  className="btn btn-primary btn-sm" 
+                  style={{ width: '100%', justifyContent: 'center', gap: 8 }}
+                  onClick={handleForceSync}
+                  disabled={syncLoading}
+                >
+                  {syncLoading ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" /> Sincronizando...
+                    </>
+                  ) : (
+                    'Forzar Sincronización'
+                  )}
                 </button>
               </div>
 
@@ -417,6 +516,113 @@ export default function Configuracion() {
           </div>
         </div>
       </div>
+
+      {/* Modal Premium para Cambiar Contraseña */}
+      {showPasswordModal && (
+        <div 
+          className="modal-overlay" 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 1050,
+            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={() => {
+            if (!passwordLoading) setShowPasswordModal(false)
+          }}
+        >
+          <div 
+            className="card card-pad" 
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.3)',
+              background: 'var(--navy-900)',
+              animation: 'modalEnter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h3 style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+                <Key size={18} color="var(--indigo-500)" /> Cambiar Contraseña
+              </h3>
+              <button 
+                type="button"
+                className="btn btn-ghost btn-icon btn-sm" 
+                style={{ color: 'var(--text-muted)' }}
+                onClick={() => setShowPasswordModal(false)}
+                disabled={passwordLoading}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label className="form-label" style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600 }}>Contraseña Actual</label>
+                <input 
+                  type="password" 
+                  className="form-input" 
+                  value={contrasenaActual}
+                  onChange={e => setContrasenaActual(e.target.value)}
+                  placeholder="Introduce tu contraseña actual"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600 }}>Nueva Contraseña</label>
+                <input 
+                  type="password" 
+                  className="form-input" 
+                  value={contrasenaNueva}
+                  onChange={e => setContrasenaNueva(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="form-label" style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600 }}>Confirmar Nueva Contraseña</label>
+                <input 
+                  type="password" 
+                  className="form-input" 
+                  value={confirmarContrasena}
+                  onChange={e => setConfirmarContrasena(e.target.value)}
+                  placeholder="Repite tu nueva contraseña"
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={() => setShowPasswordModal(false)}
+                  disabled={passwordLoading}
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  style={{ flex: 1, justifyContent: 'center' }}
+                  disabled={passwordLoading}
+                >
+                  {passwordLoading ? 'Cambiando...' : 'Cambiar Clave'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

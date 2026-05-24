@@ -14,6 +14,8 @@ import Buscar from './pages/Buscar'
 import Configuracion from './pages/Configuracion'
 import Notificaciones from './pages/Notificaciones'
 import Usuarios from './pages/Usuarios'
+import RecuperarClave from './pages/RecuperarClave'
+import RestablecerClave from './pages/RestablecerClave'
 
 function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
@@ -69,6 +71,8 @@ function AppRoutes() {
       {/* Ruta pública */}
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Register />} />
+      <Route path="/recuperar-clave" element={<RecuperarClave />} />
+      <Route path="/restablecer-clave" element={<RestablecerClave />} />
 
       {/* Rutas protegidas */}
       <Route path="/dashboard" element={
@@ -82,6 +86,11 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       <Route path="/nuevo-proyecto" element={
+        <ProtectedRoute>
+          <AppLayout><NuevoProyecto /></AppLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/editar-proyecto/:id" element={
         <ProtectedRoute>
           <AppLayout><NuevoProyecto /></AppLayout>
         </ProtectedRoute>

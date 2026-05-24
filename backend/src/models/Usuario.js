@@ -62,6 +62,16 @@ const Usuario = sequelize.define('Usuario', {
     allowNull: true,
     comment:   'Fecha y hora de la última sesión iniciada',
   },
+  token_recuperacion: {
+    type:      DataTypes.STRING(255),
+    allowNull: true,
+    comment:   'Token temporal de recuperación de contraseña',
+  },
+  expiracion_recuperacion: {
+    type:      DataTypes.DATE,
+    allowNull: true,
+    comment:   'Fecha y hora de expiración del token de recuperación',
+  },
 }, {
   tableName:  'usuario',
   timestamps: false,

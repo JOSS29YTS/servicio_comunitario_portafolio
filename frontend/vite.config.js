@@ -11,6 +11,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      // Redirige /uploads/* al backend para servir los archivos locales transparentemente
+      '/uploads': {
+        target: 'http://127.0.0.1:3001',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })
