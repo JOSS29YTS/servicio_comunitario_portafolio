@@ -13,6 +13,11 @@ const sequelize = new Sequelize(
     host:    process.env.DB_HOST || 'localhost',
     port:    process.env.DB_PORT || 3306,
     dialect: 'mysql',
+    dialectOptions: process.env.DB_SSL === 'true' ? {
+      ssl: {
+        rejectUnauthorized: false
+      }
+    } : {},
     logging: process.env.NODE_ENV === 'development'
       ? (msg) => console.log(`\x1b[36m[DB]\x1b[0m ${msg}`)
       : false,
