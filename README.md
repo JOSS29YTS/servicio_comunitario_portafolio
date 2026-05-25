@@ -11,6 +11,13 @@ El sistema está estructurado con una arquitectura moderna de **Single Page Appl
 
 ---
 
+## 🔑 Usuario Administrador Demo (Semilla)
+Al ejecutar el script de inicialización (`pnpm run db:seed`), se crea la siguiente cuenta de acceso por defecto con privilegios de **Director** para que puedas explorar la plataforma inmediatamente:
+* **Usuario**: `demo@admin.com`
+* **Contraseña**: `demo123`
+
+---
+
 ## 🚀 Características Clave
 
 ### 👤 Control de Acceso y Gestión de Roles (RBAC)
@@ -141,13 +148,6 @@ El monorepo está organizado de forma intuitiva:
 * **En desarrollo**: Puedes arrancar ambos servidores con un solo clic ejecutando el script `run_all.bat` desde la raíz en Windows, o de forma manual:
   * **Backend**: `cd backend && pnpm run dev` (Corre en `http://localhost:3001`).
   * **Frontend**: `cd frontend && pnpm run dev` (Corre en `http://localhost:5173`).
-
----
-
-## 🔑 Usuario Administrador Demo (Semilla)
-Al ejecutar el script de inicialización (`pnpm run db:seed`), se crea la siguiente cuenta de acceso por defecto con privilegios de **Director** para que puedas explorar la plataforma inmediatamente:
-* **Usuario**: `demo@admin.com`
-* **Contraseña**: `demo123`
 
 ---
 
