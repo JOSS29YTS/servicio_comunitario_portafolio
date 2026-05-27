@@ -66,49 +66,89 @@ async function seed() {
     }
   }
 
-  console.log('\n\x1b[33m⟳\x1b[0m  Insertando usuario administrador...\n')
+  console.log('\n\x1b[33m⟳\x1b[0m  Insertando usuarios de la institución...\n')
 
-  const contrasena_hash = await bcrypt.hash('demo123', 12)
-
-  // Obtener ID del rol Director
+  // Obtener IDs de roles
   const rolDirector = await Rol.findOne({ where: { nombre: 'Director' } })
   const idRolDirector = rolDirector ? rolDirector.id_rol : 1
+
+  const rolSubdirector = await Rol.findOne({ where: { nombre: 'Subdirector' } })
+  const idRolSubdirector = rolSubdirector ? rolSubdirector.id_rol : 2
 
   // Obtener ID del estado Activo
   const estadoActivo = await Estado.findOne({ where: { estado: 'Activo' } })
   const idEstadoActivo = estadoActivo ? estadoActivo.id_estado : 1
 
-  const [usuario, creado] = await Usuario.findOrCreate({
+  // ==========================================
+  // 1. USUARIO DEMO PÚBLICO (ROL: SUBDIRECTOR)
+  // ==========================================
+  const contrasena_demo_hash = await bcrypt.hash('demo123', 12)
+  const [usuarioDemo, creadoDemo] = await Usuario.findOrCreate({
     where: { email: 'demo@admin.com' },
     defaults: {
       nombre_completo: 'USUARIO DEMO',
       email:           'demo@admin.com',
-      contrasena_hash,
+      contrasena_hash: contrasena_demo_hash,
+      id_rol:          idRolSubdirector,
+      id_estado:       idEstadoActivo,
+      creado_en:       new Date(),
+    },
+  })
+
+  if (creadoDemo) {
+    console.log('  ✔ Usuario Demo creado exitosamente:')
+  } else {
+    await usuarioDemo.update({ 
+      contrasena_hash: contrasena_demo_hash, 
+      nombre_completo: 'USUARIO DEMO',
+      id_rol:          idRolSubdirector,
+      id_estado:       idEstadoActivo
+    })
+    console.log('  • Usuario Demo ya existía — datos actualizados:')
+  }
+  console.log(`     Nombre: ${usuarioDemo.nombre_completo}`)
+  console.log(`     Email:  ${usuarioDemo.email}`)
+  console.log(`     Rol:    Subdirector (ID: ${usuarioDemo.id_rol})`)
+  console.log(`     Estado: Activo (ID: ${usuarioDemo.id_estado})`)
+  console.log(`     ID:     ${usuarioDemo.id_usuario}\n`)
+
+  // ==========================================
+  // 2. USUARIO DIRECTOR PRIVADO (ROL: DIRECTOR)
+  // ==========================================
+  const dirNombre = process.env.DIRECTOR_NAME || 'Alejandro Villa'
+  const dirEmail = process.env.DIRECTOR_EMAIL || 'director@admin.com'
+  const dirClave = process.env.DIRECTOR_PASSWORD || 'director123'
+  
+  const contrasena_dir_hash = await bcrypt.hash(dirClave, 12)
+  const [usuarioDir, creadoDir] = await Usuario.findOrCreate({
+    where: { email: dirEmail },
+    defaults: {
+      nombre_completo: dirNombre,
+      email:           dirEmail,
+      contrasena_hash: contrasena_dir_hash,
       id_rol:          idRolDirector,
       id_estado:       idEstadoActivo,
       creado_en:       new Date(),
     },
   })
 
-  if (creado) {
-    console.log('\x1b[32m✔\x1b[0m  Usuario creado exitosamente:')
+  if (creadoDir) {
+    console.log('  ✔ Director Privado creado exitosamente:')
   } else {
-    // Si ya existía, actualizar la contraseña y asegurar el rol Director y estado Activo
-    await usuario.update({ 
-      contrasena_hash, 
-      nombre_completo: 'USUARIO DEMO',
+    await usuarioDir.update({ 
+      contrasena_hash: contrasena_dir_hash, 
+      nombre_completo: dirNombre,
       id_rol:          idRolDirector,
       id_estado:       idEstadoActivo
     })
-    console.log('\x1b[33m!\x1b[0m  Usuario ya existía — datos actualizados:')
+    console.log('  • Director Privado ya existía — datos actualizados:')
   }
+  console.log(`     Nombre: ${usuarioDir.nombre_completo}`)
+  console.log(`     Email:  ${usuarioDir.email}`)
+  console.log(`     Rol:    Director (ID: ${usuarioDir.id_rol})`)
+  console.log(`     Estado: Activo (ID: ${usuarioDir.id_estado})`)
+  console.log(`     ID:     ${usuarioDir.id_usuario}\n`)
 
-  console.log(`     Nombre: ${usuario.nombre_completo}`)
-  console.log(`     Email:  ${usuario.email}`)
-  console.log(`     Rol:    Director (ID: ${usuario.id_rol})`)
-  console.log(`     Estado: Activo (ID: ${usuario.id_estado})`)
-  console.log(`     ID:     ${usuario.id_usuario}`)
-  console.log('')
   process.exit(0)
 }
 

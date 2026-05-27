@@ -11,10 +11,22 @@ El sistema está estructurado con una arquitectura moderna de **Single Page Appl
 
 ---
 
-## 🔑 Usuario Administrador Demo (Semilla)
-Al ejecutar el script de inicialización (`pnpm run db:seed`), se crea la siguiente cuenta de acceso por defecto con privilegios de **Director** para que puedas explorar la plataforma inmediatamente:
-* **Usuario**: `demo@admin.com`
+## 🔑 Usuarios Predeterminados y Roles de Acceso (Semilla)
+
+Al ejecutar el script de inicialización (`pnpm run db:seed`), el sistema creará dos perfiles de acceso clave para balancear la exploración pública y la administración privada:
+
+### 1. 👥 Cuenta de Demostración Pública (Rol: Subdirector)
+Diseñada para exhibir de forma segura tu portafolio académico a terceros, reclutadores o docentes visitantes sin riesgos de seguridad:
+* **Usuario/Email**: `demo@admin.com`
 * **Contraseña**: `demo123`
+* **Privilegios**: Rol de **Subdirector** (puede gestionar proyectos, registrar profesores, realizar sincronizaciones y respaldos, pero **no** tiene permisos para eliminar o desactivar a usuarios directivos como el Director principal).
+
+### 2. 🔐 Cuenta de Director Principal (Rol: Director - Privada)
+Tu cuenta personal de control total sobre el sistema:
+* **Usuario/Email**: Configurable mediante la variable `DIRECTOR_EMAIL` en `.env` (valor por defecto: `director@admin.com`).
+* **Contraseña**: Configurable mediante la variable `DIRECTOR_PASSWORD` en `.env` (valor por defecto: `director123`).
+* **Nombre**: Configurable mediante la variable `DIRECTOR_NAME` en `.env` (valor por defecto: `Alejandro Villa`).
+* **Privilegios**: Rol de **Director** (control total del sistema, auditorías completas, desactivación y eliminación de cualquier usuario, incluido el Subdirector de demostración).
 
 ---
 
