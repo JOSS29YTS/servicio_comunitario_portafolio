@@ -53,6 +53,13 @@ export default function Usuarios() {
     }, 4000)
   }
 
+  const shouldShowActions = (targetUser) => {
+    if (!currentUser || !targetUser) return false
+    if (currentUser.rol === 'Director') return true
+    if (currentUser.rol === 'Subdirector') return targetUser.rol === 'Profesor'
+    return false
+  }
+
   // Cargar datos al montar el componente
   useEffect(() => {
     fetchData()
@@ -336,7 +343,7 @@ export default function Usuarios() {
                         </span>
                       </td>
                       <td style={{ textAlign: 'right', paddingRight: 24 }}>
-                        {canManageUser(u) && (
+                        {shouldShowActions(u) && (
                           <div className="user-menu-container">
                             <button 
                               className="btn btn-ghost btn-sm btn-icon" 
@@ -429,7 +436,7 @@ export default function Usuarios() {
                     </div>
                   </div>
                   
-                  {canManageUser(u) && (
+                  {shouldShowActions(u) && (
                     <div className="user-menu-container">
                       <button 
                         className="btn btn-ghost btn-sm btn-icon" 

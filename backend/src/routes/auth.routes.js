@@ -882,4 +882,21 @@ router.delete('/usuarios/:id', authMiddleware, checkRole(['Director', 'Subdirect
   }
 })
 
+// ── GET /api/auth/audit-logs ─────────────────────────────
+// Obtener los últimos 50 registros de auditoría (Protegido, excluyendo IP por seguridad)
+router.get('/audit-logs', authMiddleware, async (req, res) => {
+  try {
+    const { AuditLog } = require('../models')
+    const logs = await AuditLog.findAll({
+      attributes: { exclude: ['ip_direccion'] },
+      limit: 50,
+      order: [['fecha_hora', 'DESC']]
+    })
+    return res.json({ ok: true, logs })
+  } catch (error) {
+    console.error('[AUTH] Error al consultar logs:', error)
+    return res.status(500).json({ ok: false, mensaje: 'Error al consultar los registros de auditoría.' })
+  }
+})
+
 module.exports = router

@@ -3188,3 +3188,51 @@ input:checked+.slider:before {
 .lazy-image.loaded {
   opacity: 1;
 }
+
+/* ============================================================
+   GRUPO DE LOGOS EN HERO (PORTADA PRINCIPAL)
+   ============================================================ */
+.hero-logos-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.hero-logo-large {
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Avatar circular de la Virgen */
+.hero-logo-large.virgen-avatar {
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--white);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  background: var(--white);
+  animation-delay: 0.5s; /* Desfase para efecto flotante asincrónico */
+}
+
+:root.dark .hero-logo-large.virgen-avatar {
+  border-color: var(--navy-800);
+  background: var(--navy-900);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.1);
+}
+
+.hero-logo-large.virgen-avatar img {
+  object-fit: cover;
+}
+
+/* Prevenir que la Virgen se invierta a blanco en Modo Oscuro */
+:root.dark .hero-logo-large img.no-invert {
+  filter: none !important;
+}

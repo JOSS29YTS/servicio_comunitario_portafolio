@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Bell, Sun, Moon, Menu } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 
 const PAGE_TITLES = {
   '/dashboard':      { title: 'Dashboard',          sub: 'Resumen del sistema' },
@@ -42,6 +43,31 @@ export default function Header({ onMenuClick }) {
       setCurrentTime(new Date())
     }, 1000)
     return () => clearInterval(timer)
+  }, [])
+
+  const [notifications, setNotifications] = React.useState([])
+
+  const fetchNotifications = async () => {
+    try {
+      const { data } = await api.get('/auth/audit-logs')
+      if (data.ok && data.logs) {
+        const interestActions = [
+          'CREAR_PROYECTO', 'EDITAR_PROYECTO', 'ELIMINAR_PROYECTO', 
+          'REGISTRO_SOLICITADO', 'CAMBIO_ROL_USUARIO', 'CAMBIO_ESTADO_CUENTA', 
+          'ELIMINAR_USUARIO', 'RESPALDO_COMPLETADO_AUTO', 'RESPALDO_COMPLETADO_MANUAL'
+        ]
+        const filtered = data.logs.filter(log => interestActions.includes(log.accion))
+        setNotifications(filtered.slice(0, 5))
+      }
+    } catch (err) {
+      console.error('[HEADER] Error al consultar bitácora:', err)
+    }
+  }
+
+  React.useEffect(() => {
+    fetchNotifications()
+    const timerId = setInterval(fetchNotifications, 30000)
+    return () => clearInterval(timerId)
   }, [])
 
   const today = formatDate(currentTime)
@@ -101,30 +127,83 @@ export default function Header({ onMenuClick }) {
             style={{ position: 'relative' }}
           >
             <Bell size={18} />
-            <span style={{
-              position: 'absolute',
-              top: '6px',
-              right: '6px',
-              width: '8px',
-              height: '8px',
-              background: 'var(--indigo-500)',
-              borderRadius: '50%',
-              border: '1.5px solid var(--bg-card-special)',
-            }} />
+            {notifications.length > 0 && (
+              <span style={{
+                position: 'absolute',
+                top: '6px',
+                right: '6px',
+                width: '8px',
+                height: '8px',
+                background: 'var(--indigo-500)',
+                borderRadius: '50%',
+                border: '1.5px solid var(--bg-card-special)',
+              }} />
+            )}
           </button>
 
           {showNotifications && (
             <div className="notif-dropdown">
               <div className="notif-header">
                 <h3>Notificaciones</h3>
-                <span className="notif-badge">Vacio</span>
+                <span className="notif-badge">
+                  {notifications.length === 0 ? 'Vacío' : `${notifications.length} Activas`}
+                </span>
               </div>
               <div className="notif-body">
-                <div className="notif-empty">
-                  <Bell size={24} />
-                  <p>No tienes notificaciones pendientes</p>
-                  <span>Te avisaremos cuando haya actividad importante</span>
-                </div>
+                {notifications.length === 0 ? (
+                  <div className="notif-empty">
+                    <Bell size={24} />
+                    <p>No tienes notificaciones pendientes</p>
+                    <span>Te avisaremos cuando haya actividad importante</span>
+                  </div>
+                ) : (
+                  <div className="notif-list" style={{ display: 'flex', flexDirection: 'column' }}>
+                    {notifications.map((n) => {
+                      const dateStr = new Date(n.fecha_hora).toLocaleTimeString('es-VE', { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        hour12: true 
+                      })
+                      return (
+                        <div 
+                          key={n.id_log} 
+                          className="notif-item" 
+                          style={{ 
+                            padding: '12px 16px', 
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            gap: 4,
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s'
+                          }} 
+                          onClick={() => {
+                            navigate('/notificaciones')
+                            setShowNotifications(false)
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.05)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 700, fontSize: 12.5, color: 'var(--text-primary)' }}>
+                              {n.accion.replace(/_/g, ' ')}
+                            </span>
+                            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                              {dateStr}
+                            </span>
+                          </div>
+                          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                            {n.descripcion}
+                          </p>
+                          <span style={{ fontSize: 10.5, color: 'var(--indigo-400)', fontWeight: 600 }}>
+                            Por: {n.usuario_nombre || 'Sistema'}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
               <div className="notif-footer">
                 <button onClick={() => {

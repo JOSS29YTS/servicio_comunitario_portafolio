@@ -68,17 +68,31 @@ export default function Home() {
 
       {/* Sección Hero */}
       <header className="home-hero">
-        <div className="hero-logo-large" title="Colegio Nuestra Señora de Fátima">
-          {!logoError ? (
-            <img 
-              src="/logo_fatima.svg" 
-              alt="Colegio NSF" 
-              onError={() => setLogoError(true)} 
-            />
-          ) : (
-            <BookOpen className="fallback-logo-icon-large" size={80} />
-          )}
-        </div>
+        {!logoError ? (
+          <div className="hero-logos-group">
+            {/* Logo Colegio */}
+            <div className="hero-logo-large" title="Colegio Nuestra Señora de Fátima">
+              <img 
+                src="/logo_fatima.svg" 
+                alt="Colegio NSF" 
+                onError={() => setLogoError(true)} 
+              />
+            </div>
+            {/* Virgen de Fátima */}
+            <div className="hero-logo-large virgen-avatar" title="Nuestra Señora de Fátima">
+              <img 
+                src="/virgen_fatima.png" 
+                alt="Virgen María" 
+                className="no-invert"
+                onError={() => setLogoError(true)} 
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="hero-logo-large" style={{ margin: '0 auto 24px' }}>
+            <BookOpen className="fallback-logo-icon-large" size={120} />
+          </div>
+        )}
 
         <h1 className="hero-title">
           Repositorio Académico <br />
