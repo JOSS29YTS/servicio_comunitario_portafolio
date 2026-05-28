@@ -32,11 +32,21 @@ Tu cuenta personal de control total sobre el sistema:
 
 ## 🚀 Características Clave
 
-### 👤 Control de Acceso y Gestión de Roles (RBAC)
+### 👤 Control de Acceso, Privilegios y Gestión de Roles (RBAC)
 * **Autenticación Robusta**: Inicio de sesión seguro mediante tokens Web JSON (JWT) con expiración automática de sesión.
 * **Roles Granulares (RBAC)**: Flujos diferenciados y permisos estrictos para **Directores**, **Subdirectores** y **Profesores**.
+* **Protección de Privilegios de Seguridad**: El sistema restringe al rol de **Subdirector** para que únicamente pueda realizar modificaciones a usuarios con rol **Profesor**, inhabilitando visual y lógicamente cualquier acción administrativa sobre Directores u otros Subdirectores.
 * **Flujo de Aprobación**: Los nuevos registros de docentes entran en estado *Pendiente* y requieren la validación física de un Director para acceder al panel.
-* **Auditoría del Sistema (Audit Log)**: Registro inmutable de acciones críticas (inicios de sesión fallidos, creación/edición/borrado de proyectos, cambios de roles) visible para directores.
+* **Bitácora del Sistema en Tiempo Real (Audit Logs Seguros)**: Registro inmutable de acciones críticas (inicios de sesión fallidos, creación/edición/borrado de proyectos, cambios de roles) consultable dinámicamente cada 30 segundos en la cabecera. Por **seguridad y privacidad de red**, se excluyen estrictamente las direcciones IP del API y de la interfaz de usuario.
+
+### 🎓 Gestión Relacional de Tutores Académicos ($N:M$ — $3\text{NF}$)
+* **Normalización en Base de Datos**: Esquema relacional estructurado bajo la Tercera Forma Normal ($3\text{NF}$) separando a los docentes en un modelo independiente `Tutor` y vinculándolos con `Proyecto` mediante una tabla pivot (`proyecto_tutor`).
+* **Formulario Dinámico Multicasilla**: Permite asociar dinámicamente múltiples tutores académicos a un mismo proyecto de investigación escolar al vuelo, con validaciones en tiempo real e hidratación inteligente en edición.
+* **Insignias y Búsqueda Cruzada**: El detalle de proyectos despliega insignias dedicadas de asesores académicos con el icono premium `GraduationCap` y permite indexaciones de búsqueda inmediata por coincidencia.
+
+### 🎨 Estética e Interfaz de Usuario de Alta Fidelidad (UX/UI Premium)
+* **Doble Identidad Flotante**: El Hero del Home Page incorpora el logo del colegio y el avatar premium de la Virgen de Fátima lado a lado en un grupo flotante animado de manera asincrónica, con salvaguarda cromática en modo oscuro (`.no-invert`).
+* **Modales de Confirmación Custom Premium**: Reemplazo de las primitivas alertas nativas `window.confirm` por un componente de modal elástico interactivo (`modalEnter`) con efecto de desenfoque de fondo (*backdrop-filter: blur*), variables de tema claro/oscuro y paletas de colores asociadas a la severidad de la acción (destructivo rojo para eliminar perfil, e índigo para sincronización).
 
 ### 🧠 Automatización con Inteligencia Artificial (Google Gemini 2.0)
 * **Parser de PDFs integrado**: Al subir el archivo PDF del proyecto de investigación, el backend utiliza el SDK oficial de **Google Gemini 2.0 Flash** para analizar, extraer y estructurar automáticamente:
