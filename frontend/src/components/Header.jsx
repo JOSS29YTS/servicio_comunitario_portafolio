@@ -1,8 +1,9 @@
 import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Bell, Sun, Moon, Menu } from 'lucide-react'
+import { Bell, Sun, Moon, Menu, Shield } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
+import { IS_DEMO_MODE } from '../config/demoMode'
 
 const PAGE_TITLES = {
   '/dashboard':      { title: 'Dashboard',          sub: 'Resumen del sistema' },
@@ -100,6 +101,19 @@ export default function Header({ onMenuClick }) {
         <h1>{page.title}</h1>
         {page.sub && <p>{page.sub}</p>}
       </div>
+
+      {IS_DEMO_MODE && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)',
+          borderRadius: 'var(--radius-sm)', padding: '4px 10px',
+          fontSize: 11.5, fontWeight: 600, color: '#FBBF24', letterSpacing: '0.03em',
+          whiteSpace: 'nowrap', marginRight: 12,
+        }}>
+          <Shield size={13} />
+          Demo
+        </div>
+      )}
 
       <div className="header-actions">
         <span className="header-date">{todayCap}</span>
