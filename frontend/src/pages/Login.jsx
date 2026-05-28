@@ -242,9 +242,6 @@ export default function Login() {
             </div>
           </div>
 
-          {IS_DEMO_MODE && (
-          )}
-
           <button
             id="login-submit"
             type="submit"
