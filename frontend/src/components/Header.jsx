@@ -51,13 +51,7 @@ export default function Header({ onMenuClick }) {
     try {
       const { data } = await api.get('/auth/audit-logs')
       if (data.ok && data.logs) {
-        const interestActions = [
-          'CREAR_PROYECTO', 'EDITAR_PROYECTO', 'ELIMINAR_PROYECTO', 
-          'REGISTRO_SOLICITADO', 'CAMBIO_ROL_USUARIO', 'CAMBIO_ESTADO_CUENTA', 
-          'ELIMINAR_USUARIO', 'RESPALDO_COMPLETADO_AUTO', 'RESPALDO_COMPLETADO_MANUAL'
-        ]
-        const filtered = data.logs.filter(log => interestActions.includes(log.accion))
-        setNotifications(filtered.slice(0, 3))
+        setNotifications(data.logs.slice(0, 3))
       }
     } catch (err) {
       console.error('[HEADER] Error al consultar bitácora:', err)
