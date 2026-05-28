@@ -497,7 +497,7 @@ export default function Configuracion() {
                 <div className="stat-label"><HardDrive size={16} color="var(--amber-500)" /> Almacenamiento</div>
                 <div style={{ textAlign: 'right' }}>
                   <div className="stat-value">{(stats.espacioUsadoDiscoBytes / 1024 / 1024).toFixed(1)} MB</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>de {(stats.limiteDiscoBytes / 1024 / 1024).toFixed(0)} MB usados</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>de 15360 MB usados ({((stats.espacioUsadoDiscoBytes / 1024 / 1024) / 15360 * 100).toFixed(0)}%)</div>
                 </div>
               </div>
             </div>
