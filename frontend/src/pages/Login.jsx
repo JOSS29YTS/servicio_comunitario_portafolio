@@ -1,14 +1,16 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Eye, EyeOff, BookOpen, Lock, Mail, AlertCircle, ArrowLeft, Sun, Moon } from 'lucide-react'
+import { IS_DEMO_MODE, DEMO_EMAIL, DEMO_PASSWORD } from '../config/demoMode'
+import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowLeft, Sun, Moon, Play } from 'lucide-react'
 
 export default function Login() {
-  const [email, setEmail]       = useState('')
+  const [email, setEmail]       = useState(IS_DEMO_MODE ? DEMO_EMAIL : '')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd]   = useState(false)
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
+  const [demoLoading, setDemoLoading] = useState(false)
 
   const [isDark, setIsDark] = useState(
     document.documentElement.classList.contains('dark')
@@ -26,13 +28,14 @@ export default function Login() {
     }
   }
 
-  const { login } = useAuth()
+  const { login, loginDemo } = useAuth()
   const navigate  = useNavigate()
   const location  = useLocation()
 
-  // Detectar si la sesión expiró
   const queryParams = new URLSearchParams(location.search)
   const sessionExpired = queryParams.get('session_expired') === 'true'
+
+  const isBusy = loading || demoLoading
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -51,12 +54,23 @@ export default function Login() {
     }
   }
 
+  const handleDemoLogin = async () => {
+    setError('')
+    setDemoLoading(true)
+    const result = await loginDemo()
+    setDemoLoading(false)
+    if (result.success) {
+      navigate('/dashboard')
+    } else {
+      setError(result.message)
+    }
+  }
+
   return (
     <div className="login-page">
       <div className="login-bg-grid" />
       <div className="login-bg-glow" />
 
-      {/* Botón flotante para cambiar de tema */}
       <button
         className="btn-theme-toggle-floating"
         title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
@@ -67,7 +81,6 @@ export default function Login() {
       </button>
 
       <div className="login-card">
-        {/* Logo e identidad del colegio */}
         <div className="login-header" style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 }}>
             <div className="login-logo" style={{ width: 40, height: 40, margin: 0 }}>
@@ -77,10 +90,27 @@ export default function Login() {
               Colegio Nuestra<br/>Señora de Fátima
             </div>
           </div>
-          <div className="login-title" style={{ fontSize: 20 }}>Acceso al Sistema</div>
+          <div className="login-title" style={{ fontSize: 20 }}>
+            {IS_DEMO_MODE ? 'Demostración del Sistema' : 'Acceso al Sistema'}
+          </div>
         </div>
 
-        {/* Sesión Expirada */}
+        {IS_DEMO_MODE && (
+          <div style={{
+            background: 'rgba(99,102,241,0.12)',
+            border: '1px solid rgba(99,102,241,0.35)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 14px',
+            marginBottom: 16,
+            fontSize: 13,
+            color: 'var(--navy-200)',
+            lineHeight: 1.5,
+          }}>
+            Modo demostración — cuenta de prueba con permisos limitados (Subdirector).
+            Usa el botón de abajo para explorar el sistema sin registrarte.
+          </div>
+        )}
+
         {sessionExpired && !error && (
           <div style={{
             display: 'flex',
@@ -99,7 +129,6 @@ export default function Login() {
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div style={{
             display: 'flex',
@@ -118,7 +147,32 @@ export default function Login() {
           </div>
         )}
 
-        {/* Formulario */}
+        {IS_DEMO_MODE && (
+          <button
+            type="button"
+            className="btn btn-primary btn-lg login-btn"
+            style={{ marginBottom: 16, width: '100%' }}
+            disabled={isBusy}
+            onClick={handleDemoLogin}
+          >
+            {demoLoading ? (
+              <>
+                <span style={{
+                  width: 16, height: 16, border: '2.5px solid rgba(255,255,255,0.3)',
+                  borderTop: '2.5px solid white', borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite', display: 'inline-block'
+                }} />
+                Entrando...
+              </>
+            ) : (
+              <>
+                <Play size={16} />
+                Probar demo
+              </>
+            )}
+          </button>
+        )}
+
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label">
@@ -129,11 +183,13 @@ export default function Login() {
               id="login-email"
               type="email"
               className="form-input"
-              placeholder="directora@colegiofatima.edu.ve"
+              placeholder={IS_DEMO_MODE ? DEMO_EMAIL : 'directora@colegiofatima.edu.ve'}
               value={email}
               onChange={e => setEmail(e.target.value)}
               autoComplete="email"
-              autoFocus
+              autoFocus={!IS_DEMO_MODE}
+              readOnly={IS_DEMO_MODE}
+              style={IS_DEMO_MODE ? { opacity: 0.85, cursor: 'not-allowed' } : undefined}
             />
           </div>
 
@@ -143,14 +199,16 @@ export default function Login() {
                 <Lock size={13} style={{ display:'inline', marginRight:4, verticalAlign:'middle' }} />
                 Contraseña
               </label>
-              <span
-                onClick={() => navigate('/recuperar-clave')}
-                style={{ fontSize: '12.5px', color: 'var(--indigo-400)', cursor: 'pointer', fontWeight: 500, transition: 'color 0.2s' }}
-                onMouseEnter={e => e.target.style.color = 'var(--indigo-300)'}
-                onMouseLeave={e => e.target.style.color = 'var(--indigo-400)'}
-              >
-                ¿Olvidaste tu contraseña?
-              </span>
+              {!IS_DEMO_MODE && (
+                <span
+                  onClick={() => navigate('/recuperar-clave')}
+                  style={{ fontSize: '12.5px', color: 'var(--indigo-400)', cursor: 'pointer', fontWeight: 500, transition: 'color 0.2s' }}
+                  onMouseEnter={e => e.target.style.color = 'var(--indigo-300)'}
+                  onMouseLeave={e => e.target.style.color = 'var(--indigo-400)'}
+                >
+                  ¿Olvidaste tu contraseña?
+                </span>
+              )}
             </div>
             <div style={{ position: 'relative' }}>
               <input
@@ -184,11 +242,17 @@ export default function Login() {
             </div>
           </div>
 
+          {IS_DEMO_MODE && (
+            <p style={{ fontSize: 12, color: 'var(--navy-400)', margin: '0 0 12px', lineHeight: 1.4 }}>
+              Acceso manual: contraseña <code style={{ color: 'var(--indigo-400)' }}>{DEMO_PASSWORD}</code>
+            </p>
+          )}
+
           <button
             id="login-submit"
             type="submit"
-            className="btn btn-primary btn-lg login-btn"
-            disabled={loading}
+            className={`btn btn-lg login-btn ${IS_DEMO_MODE ? 'btn-ghost' : 'btn-primary'}`}
+            disabled={isBusy}
           >
             {loading ? (
               <>
@@ -202,22 +266,23 @@ export default function Login() {
             ) : (
               <>
                 <Lock size={16} />
-                Iniciar Sesión
+                {IS_DEMO_MODE ? 'Iniciar con contraseña' : 'Iniciar Sesión'}
               </>
             )}
           </button>
         </form>
 
-
-        <div className="login-register-prompt">
-          ¿No tienes cuenta?{' '}
-          <span
-            className="login-register-link"
-            onClick={() => navigate('/registro')}
-          >
-            Regístrate aquí
-          </span>
-        </div>
+        {!IS_DEMO_MODE && (
+          <div className="login-register-prompt">
+            ¿No tienes cuenta?{' '}
+            <span
+              className="login-register-link"
+              onClick={() => navigate('/registro')}
+            >
+              Regístrate aquí
+            </span>
+          </div>
+        )}
 
         <div style={{ textAlign: 'center', marginTop: 14, fontSize: 13 }}>
           <span
@@ -232,7 +297,9 @@ export default function Login() {
 
         <div className="login-footer">
           <Lock size={11} style={{ display: 'inline', marginRight: 4, verticalAlign: 'middle' }} />
-          Acceso restringido exclusivamente a la Dirección del plantel
+          {IS_DEMO_MODE
+            ? 'Entorno de demostración — los datos pueden restablecerse periódicamente'
+            : 'Acceso restringido exclusivamente a la Dirección del plantel'}
         </div>
       </div>
 

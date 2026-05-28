@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react'
 import { 
   Settings, User, Database, Shield, Camera, 
   Key, Bell, Globe, Activity, HardDrive, 
-  FileText, Users, Mail, ExternalLink, RefreshCw, X
+  FileText, Users, Mail, ExternalLink, RefreshCw, X,
+  Eye, EyeOff
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { IS_DEMO_MODE } from '../config/demoMode'
 import api from '../services/api'
 
 export default function Configuracion() {
@@ -82,6 +84,9 @@ export default function Configuracion() {
   const [contrasenaNueva, setContrasenaNueva] = useState('')
   const [confirmarContrasena, setConfirmarContrasena] = useState('')
   const [passwordLoading, setPasswordLoading] = useState(false)
+  const [showActual, setShowActual] = useState(false)
+  const [showNueva, setShowNueva] = useState(false)
+  const [showConfirmar, setShowConfirmar] = useState(false)
 
   const handleChangePassword = async (e) => {
     e.preventDefault()
@@ -429,9 +434,11 @@ export default function Configuracion() {
               </div>
             </div>
             
-            <button className="btn btn-ghost" onClick={() => setShowPasswordModal(true)} style={{ marginTop: 24, width: '100%', justifyContent: 'center', gap: 8 }}>
-              <Key size={16} /> Cambiar Contraseña
-            </button>
+            {!IS_DEMO_MODE && (
+              <button className="btn btn-ghost" onClick={() => setShowPasswordModal(true)} style={{ marginTop: 24, width: '100%', justifyContent: 'center', gap: 8 }}>
+                <Key size={16} /> Cambiar Contraseña
+              </button>
+            )}
           </div>
 
           {/* Preferencias */}
@@ -603,7 +610,7 @@ export default function Configuracion() {
       </div>
 
       {/* Modal Premium para Cambiar Contraseña */}
-      {showPasswordModal && (
+      {!IS_DEMO_MODE && showPasswordModal && (
         <div 
           className="modal-overlay" 
           style={{
@@ -649,40 +656,108 @@ export default function Configuracion() {
             </div>
 
             <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Contraseña Actual */}
               <div>
                 <label className="form-label" style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600 }}>Contraseña Actual</label>
-                <input 
-                  type="password" 
-                  className="form-input" 
-                  value={contrasenaActual}
-                  onChange={e => setContrasenaActual(e.target.value)}
-                  placeholder="Introduce tu contraseña actual"
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showActual ? 'text' : 'password'}
+                    className="form-input" 
+                    value={contrasenaActual}
+                    onChange={e => setContrasenaActual(e.target.value)}
+                    placeholder="Introduce tu contraseña actual"
+                    style={{ paddingRight: 40 }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowActual(v => !v)}
+                    style={{
+                      position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--text-muted)', padding: 4, display: 'flex', alignItems: 'center'
+                    }}
+                    tabIndex={-1}
+                  >
+                    {showActual ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
+              {/* Nueva Contraseña */}
               <div>
                 <label className="form-label" style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600 }}>Nueva Contraseña</label>
-                <input 
-                  type="password" 
-                  className="form-input" 
-                  value={contrasenaNueva}
-                  onChange={e => setContrasenaNueva(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showNueva ? 'text' : 'password'}
+                    className="form-input" 
+                    value={contrasenaNueva}
+                    onChange={e => setContrasenaNueva(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    style={{ paddingRight: 40 }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNueva(v => !v)}
+                    style={{
+                      position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--text-muted)', padding: 4, display: 'flex', alignItems: 'center'
+                    }}
+                    tabIndex={-1}
+                  >
+                    {showNueva ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {contrasenaNueva.length > 0 && contrasenaNueva.length < 6 && (
+                  <p style={{ fontSize: 12, color: '#f87171', marginTop: 4, marginBottom: 0 }}>
+                    ⚠ La contraseña debe tener al menos 6 caracteres
+                  </p>
+                )}
+                {contrasenaNueva.length >= 6 && (
+                  <p style={{ fontSize: 12, color: '#4ade80', marginTop: 4, marginBottom: 0 }}>
+                    ✓ Longitud correcta
+                  </p>
+                )}
               </div>
 
+              {/* Confirmar Nueva Contraseña */}
               <div>
                 <label className="form-label" style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 600 }}>Confirmar Nueva Contraseña</label>
-                <input 
-                  type="password" 
-                  className="form-input" 
-                  value={confirmarContrasena}
-                  onChange={e => setConfirmarContrasena(e.target.value)}
-                  placeholder="Repite tu nueva contraseña"
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input 
+                    type={showConfirmar ? 'text' : 'password'}
+                    className="form-input" 
+                    value={confirmarContrasena}
+                    onChange={e => setConfirmarContrasena(e.target.value)}
+                    placeholder="Repite tu nueva contraseña"
+                    style={{ paddingRight: 40 }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmar(v => !v)}
+                    style={{
+                      position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--text-muted)', padding: 4, display: 'flex', alignItems: 'center'
+                    }}
+                    tabIndex={-1}
+                  >
+                    {showConfirmar ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {confirmarContrasena.length > 0 && contrasenaNueva !== confirmarContrasena && (
+                  <p style={{ fontSize: 12, color: '#f87171', marginTop: 4, marginBottom: 0 }}>
+                    ✗ Las contraseñas no coinciden
+                  </p>
+                )}
+                {confirmarContrasena.length > 0 && contrasenaNueva === confirmarContrasena && contrasenaNueva.length >= 6 && (
+                  <p style={{ fontSize: 12, color: '#4ade80', marginTop: 4, marginBottom: 0 }}>
+                    ✓ Las contraseñas coinciden
+                  </p>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>

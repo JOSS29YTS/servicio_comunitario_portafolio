@@ -13,11 +13,41 @@ El sistema está estructurado con una arquitectura moderna de **Single Page Appl
 
 ## 🔑 Cuenta de Demostración Pública (Semilla)
 
-Al ejecutar el script de inicialización (`pnpm run db:seed`), el sistema creará un perfil de demostración pública diseñado para exhibir de forma segura tu portafolio académico a terceros, reclutadores o docentes visitantes sin riesgos de seguridad:
+Al ejecutar el script de inicialización (`pnpm run db:seed`), el sistema creará un perfil de demostración pública diseñado para exhibir de forma segura tu portafolio académico a terceros, reclutadores o docentes visitantes:
 
 * **Usuario/Email**: `demo@admin.com`
-* **Contraseña**: `demo123`
+* **Contraseña**: `demo123` (solo necesaria si inicias sesión manualmente; en portafolio usa el botón **Probar demo**)
 * **Privilegios**: Rol de **Subdirector** (puede visualizar y registrar proyectos, simular la sincronización y operar la plataforma de manera segura, pero sin permisos para eliminar información de base de datos o modificar a los usuarios directivos principales).
+
+### Modo demostración (despliegue en portafolio)
+
+Para el entorno público del portafolio, activa el modo demo en **ambos** servicios:
+
+**Backend** (`backend/.env`):
+
+```env
+DEMO_MODE=true
+DEMO_EMAIL=demo@admin.com
+```
+
+**Frontend** (`frontend/.env`):
+
+```env
+VITE_DEMO_MODE=true
+```
+
+Con esto el sistema:
+
+- Muestra el botón **Probar demo** en el login (acceso sin escribir contraseña).
+- Solo permite iniciar sesión con `demo@admin.com` (no con `director@admin.com` ni otras cuentas).
+- Bloquea registro, recuperación y cambio de contraseña (en API y en la interfaz).
+- Oculta el enlace **Cambiar Contraseña** en Configuración.
+
+En **desarrollo local**, deja `DEMO_MODE=false` y `VITE_DEMO_MODE=false` para probar registro, recuperación de clave y la cuenta de Director.
+
+**Seguridad en producción:** usa `DIRECTOR_EMAIL` y `DIRECTOR_PASSWORD` fuertes y privados (nunca los valores por defecto del seed). No publiques credenciales del Director en el README ni en la UI del portafolio.
+
+Si un visitante altera la clave demo, ejecuta de nuevo `pnpm run db:seed` en el backend para restaurar `demo123`.
 
 ---
 

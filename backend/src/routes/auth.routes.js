@@ -1,6 +1,7 @@
 // ============================================================
 // RUTAS: Autenticación
 // POST /api/auth/login              → Iniciar sesión
+// POST /api/auth/demo-login         → Acceso demo (solo si DEMO_MODE=true)
 // POST /api/auth/registro           → Registrar nuevo usuario (Pendiente)
 // GET  /api/auth/me                 → Datos del usuario autenticado
 // POST /api/auth/logout             → Cerrar sesión (informativo)
@@ -21,8 +22,56 @@ const checkRole      = require('../middlewares/checkRole')
 const { authLimiter } = require('../middlewares/rateLimiter')
 const { sendRecoveryEmail } = require('../utils/emailService')
 const { registrarAccion } = require('../services/auditService')
+const { isDemoMode, getDemoEmail } = require('../config/demoMode')
+const { blockIfDemoMode, restrictLoginToDemo } = require('../middlewares/demoMode')
 
 const router = express.Router()
+
+/** Respuesta JWT unificada para login y demo-login */
+async function emitirSesion(res, usuario, req, mensaje = 'Inicio de sesión exitoso.') {
+  await usuario.update({ ultima_conexion: new Date() })
+
+  const payload = {
+    id_usuario:      usuario.id_usuario,
+    email:           usuario.email,
+    nombre_completo: usuario.nombre_completo,
+  }
+
+  const token = jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '8h',
+  })
+
+  await registrarAccion(
+    {
+      usuario: {
+        id_usuario:      usuario.id_usuario,
+        nombre_completo: usuario.nombre_completo,
+        email:           usuario.email,
+      },
+      ip:      req.ip,
+      headers: req.headers,
+      socket:  req.socket,
+    },
+    'LOGIN_EXITOSO',
+    `Inicio de sesión exitoso. Rol: ${usuario.rol?.nombre || 'Sin Rol'}`
+  )
+
+  return res.status(200).json({
+    ok: true,
+    mensaje,
+    token,
+    usuario: {
+      id_usuario:      usuario.id_usuario,
+      nombre_completo: usuario.nombre_completo,
+      email:           usuario.email,
+      telefono:        usuario.telefono,
+      avatar:          usuario.avatar,
+      rol:             usuario.rol ? usuario.rol.nombre : null,
+      estado:          usuario.estado ? usuario.estado.estado : null,
+      ultima_conexion: usuario.ultima_conexion,
+    },
+  })
+}
 
 // ── POST /api/auth/login ──────────────────────────────────
 router.post(
@@ -34,6 +83,7 @@ router.post(
     body('password')
       .notEmpty().withMessage('La contraseña es requerida.'),
   ],
+  restrictLoginToDemo,
   async (req, res) => {
     // Validar inputs
     const errores = validationResult(req)
@@ -83,38 +133,7 @@ router.post(
         })
       }
 
-      // Registrar la fecha y hora de la conexión actual
-      await usuario.update({ ultima_conexion: new Date() })
-
-      // Generar JWT
-      const payload = {
-        id_usuario:      usuario.id_usuario,
-        email:           usuario.email,
-        nombre_completo: usuario.nombre_completo,
-      }
-
-      const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: process.env.JWT_EXPIRES_IN || '8h',
-      })
-
-      // Registrar auditoría de Login Exitoso
-      await registrarAccion({ usuario: { id_usuario: usuario.id_usuario, nombre_completo: usuario.nombre_completo, email: usuario.email }, ip: req.ip, headers: req.headers, socket: req.socket }, 'LOGIN_EXITOSO', `Inicio de sesión exitoso. Rol: ${usuario.rol?.nombre || 'Sin Rol'}`)
-
-      return res.status(200).json({
-        ok: true,
-        mensaje: 'Inicio de sesión exitoso.',
-        token,
-        usuario: {
-          id_usuario:      usuario.id_usuario,
-          nombre_completo: usuario.nombre_completo,
-          email:           usuario.email,
-          telefono:        usuario.telefono,
-          avatar:          usuario.avatar,
-          rol:             usuario.rol ? usuario.rol.nombre : null,
-          estado:          usuario.estado ? usuario.estado.estado : null,
-          ultima_conexion: usuario.ultima_conexion,
-        },
-      })
+      return emitirSesion(res, usuario, req)
     } catch (error) {
       console.error('[AUTH] Error en login:', error)
       return res.status(500).json({
@@ -125,10 +144,51 @@ router.post(
   }
 )
 
+// ── POST /api/auth/demo-login ─────────────────────────────
+// Acceso de un clic en modo demostración (sin contraseña en el body)
+router.post('/demo-login', authLimiter, async (req, res) => {
+  if (!isDemoMode()) {
+    return res.status(404).json({ ok: false, mensaje: 'Ruta no disponible.' })
+  }
+
+  try {
+    const usuario = await Usuario.findOne({
+      where: { email: getDemoEmail() },
+      include: [
+        { model: Rol, as: 'rol', attributes: ['id_rol', 'nombre'] },
+        { model: Estado, as: 'estado', attributes: ['id_estado', 'estado'] },
+      ],
+    })
+
+    if (!usuario) {
+      return res.status(503).json({
+        ok: false,
+        mensaje: 'La cuenta de demostración no está configurada. Ejecuta el seed de la base de datos.',
+      })
+    }
+
+    if (usuario.estado && usuario.estado.estado !== 'Activo') {
+      return res.status(403).json({
+        ok: false,
+        mensaje: `La cuenta demo está en estado '${usuario.estado.estado}'.`,
+      })
+    }
+
+    return emitirSesion(res, usuario, req, 'Acceso de demostración iniciado.')
+  } catch (error) {
+    console.error('[AUTH] Error en demo-login:', error)
+    return res.status(500).json({
+      ok: false,
+      mensaje: 'Error interno del servidor. Intenta nuevamente.',
+    })
+  }
+})
+
 // ── POST /api/auth/registro ───────────────────────────────
 router.post(
   '/registro',
   authLimiter,
+  blockIfDemoMode,
   [
     body('nombre_completo').notEmpty().withMessage('El nombre es requerido.'),
     body('email').isEmail().withMessage('Ingresa un correo electrónico válido.'),
@@ -205,6 +265,7 @@ router.post(
 router.post(
   '/recuperar-clave',
   authLimiter,
+  blockIfDemoMode,
   [
     body('email').isEmail().withMessage('Ingresa un correo electrónico válido.')
   ],
@@ -256,6 +317,7 @@ router.post(
 router.post(
   '/restablecer-clave',
   authLimiter,
+  blockIfDemoMode,
   [
     body('email').isEmail().withMessage('Ingresa un correo electrónico válido.'),
     body('token').notEmpty().withMessage('El token de seguridad es requerido.'),
@@ -414,6 +476,7 @@ router.put(
 router.put(
   '/cambiar-contrasena',
   authMiddleware,
+  blockIfDemoMode,
   [
     body('contrasena_actual')
       .notEmpty().withMessage('La contraseña actual es requerida.'),

@@ -1,6 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Shield, Search, FileText, ArrowRight, UserCheck, HelpCircle, Sun, Moon } from 'lucide-react'
+import { IS_DEMO_MODE } from '../config/demoMode'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -60,7 +61,7 @@ export default function Home() {
             Soporte Técnico
           </a>
           <button onClick={() => navigate('/login')} className="btn-nav-primary">
-            Iniciar Sesión
+            {IS_DEMO_MODE ? 'Probar demostración' : 'Iniciar Sesión'}
             <ArrowRight size={15} />
           </button>
         </div>
@@ -105,7 +106,7 @@ export default function Home() {
 
         <div className="hero-cta-group">
           <button onClick={() => navigate('/login')} className="btn btn-primary btn-lg home-cta-btn">
-            Ingresar al Sistema
+            {IS_DEMO_MODE ? 'Probar demostración' : 'Ingresar al Sistema'}
             <ArrowRight size={18} />
           </button>
           <button onClick={handleScrollToFeatures} className="btn btn-secondary btn-lg home-cta-secondary">

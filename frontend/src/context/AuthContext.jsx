@@ -104,29 +104,49 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const persistSession = (data) => {
+    const userData = {
+      ...data.usuario,
+      rol: data.usuario.rol,
+      iniciales: getIniciales(data.usuario.nombre_completo),
+      nombre_completo: formatNombre(data.usuario.nombre_completo),
+    }
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('usuario', JSON.stringify(userData))
+    setUser(userData)
+    programarExpiracionSession(data.token)
+    return { success: true }
+  }
+
   // ── LOGIN: llama al backend real ──────────────────────────
   const login = async (email, password) => {
     try {
       const { data } = await api.post('/auth/login', { email, password })
 
       if (data.ok) {
-        const userData = {
-          ...data.usuario,
-          rol: data.usuario.rol, 
-          iniciales: getIniciales(data.usuario.nombre_completo),
-          nombre_completo: formatNombre(data.usuario.nombre_completo),
-        }
-
-        // Guardar token y usuario en localStorage
-        localStorage.setItem('token',   data.token)
-        localStorage.setItem('usuario', JSON.stringify(userData))
-        setUser(userData)
-        programarExpiracionSession(data.token)
-
-        return { success: true }
+        return persistSession(data)
       }
 
       return { success: false, message: data.mensaje || 'Error al iniciar sesión.' }
+    } catch (error) {
+      const mensaje =
+        error.response?.data?.mensaje ||
+        error.response?.data?.errores?.[0] ||
+        'No se pudo conectar con el servidor. Verifica tu conexión.'
+      return { success: false, message: mensaje }
+    }
+  }
+
+  // ── DEMO LOGIN: acceso de un clic en modo portafolio ───────
+  const loginDemo = async () => {
+    try {
+      const { data } = await api.post('/auth/demo-login')
+
+      if (data.ok) {
+        return persistSession(data)
+      }
+
+      return { success: false, message: data.mensaje || 'Error al iniciar la demostración.' }
     } catch (error) {
       const mensaje =
         error.response?.data?.mensaje ||
@@ -206,6 +226,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider value={{
       user,
       login,
+      loginDemo,
       register,
       logout,
       actualizarUsuario,

@@ -16,6 +16,14 @@ import Notificaciones from './pages/Notificaciones'
 import Usuarios from './pages/Usuarios'
 import RecuperarClave from './pages/RecuperarClave'
 import RestablecerClave from './pages/RestablecerClave'
+import { IS_DEMO_MODE } from './config/demoMode'
+
+function DemoPublicRoute({ children }) {
+  if (IS_DEMO_MODE) {
+    return <Navigate to="/login" replace />
+  }
+  return children
+}
 
 function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
@@ -70,9 +78,9 @@ function AppRoutes() {
     <Routes>
       {/* Ruta pública */}
       <Route path="/login" element={<Login />} />
-      <Route path="/registro" element={<Register />} />
-      <Route path="/recuperar-clave" element={<RecuperarClave />} />
-      <Route path="/restablecer-clave" element={<RestablecerClave />} />
+      <Route path="/registro" element={<DemoPublicRoute><Register /></DemoPublicRoute>} />
+      <Route path="/recuperar-clave" element={<DemoPublicRoute><RecuperarClave /></DemoPublicRoute>} />
+      <Route path="/restablecer-clave" element={<DemoPublicRoute><RestablecerClave /></DemoPublicRoute>} />
 
       {/* Rutas protegidas */}
       <Route path="/dashboard" element={
