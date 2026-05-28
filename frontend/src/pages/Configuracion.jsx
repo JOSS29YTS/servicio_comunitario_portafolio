@@ -26,6 +26,38 @@ export default function Configuracion() {
   })
   const fileInputRef = useRef(null)
 
+  // Estado para Modal de Confirmación Custom Premium
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirmar',
+    isDanger: false,
+    onConfirm: null
+  })
+
+  const abrirConfirmacion = (title, message, onConfirm, isDanger = false, confirmText = 'Confirmar') => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      confirmText,
+      isDanger,
+      onConfirm
+    })
+  }
+
+  const cerrarConfirmacion = () => {
+    setConfirmModal({
+      isOpen: false,
+      title: '',
+      message: '',
+      confirmText: 'Confirmar',
+      isDanger: false,
+      onConfirm: null
+    })
+  }
+
   // Estados para Cambiar Contraseña
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [contrasenaActual, setContrasenaActual] = useState('')
@@ -104,24 +136,31 @@ export default function Configuracion() {
     }
   }, [user])
 
-  const handleForceSync = async () => {
-    if (window.confirm('¿Deseas iniciar una sincronización y respaldo completo de la base de datos y archivos? Esto podría tomar unos segundos.')) {
-      setSyncLoading(true)
-      try {
-        const { data } = await api.post('/backup/sincronizar')
-        if (data.ok) {
-          setBackupInfo(data.backup)
-          loadStats()
-          alert(data.mensaje || 'Respaldo manual completado exitosamente.')
+  const handleForceSync = () => {
+    abrirConfirmacion(
+      'Iniciar Respaldo y Sincronización',
+      '¿Deseas iniciar una sincronización y respaldo completo de la base de datos y archivos? Esto generará un nuevo punto de restauración seguro y podría tomar unos segundos.',
+      async () => {
+        setSyncLoading(true)
+        try {
+          const { data } = await api.post('/backup/sincronizar')
+          if (data.ok) {
+            setBackupInfo(data.backup)
+            loadStats()
+            alert(data.mensaje || 'Respaldo manual completado exitosamente.')
+          }
+        } catch (error) {
+          console.error('Error al forzar sincronización:', error)
+          const msg = error.response?.data?.mensaje || 'Error al iniciar la sincronización y respaldo.'
+          alert(msg)
+        } finally {
+          setSyncLoading(false)
+          cerrarConfirmacion()
         }
-      } catch (error) {
-        console.error('Error al forzar sincronización:', error)
-        const msg = error.response?.data?.mensaje || 'Error al iniciar la sincronización y respaldo.'
-        alert(msg)
-      } finally {
-        setSyncLoading(false)
-      }
-    }
+      },
+      false,
+      'Sincronizar'
+    )
   }
 
   const toggleNotifications = async () => {
@@ -211,21 +250,28 @@ export default function Configuracion() {
   }
 
   // Eliminar avatar y restaurar iniciales
-  const handleRemoveAvatar = async () => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar tu foto de perfil y restaurar las iniciales?')) {
-      setUploading(true)
-      try {
-        const { data } = await api.delete('/auth/avatar')
-        if (data.ok) {
-          actualizarUsuario({ avatar: null })
+  const handleRemoveAvatar = () => {
+    abrirConfirmacion(
+      '¿Quitar foto de perfil?',
+      '¿Estás seguro de que deseas eliminar tu foto de perfil y restaurar las iniciales? Esta acción no se puede deshacer.',
+      async () => {
+        setUploading(true)
+        try {
+          const { data } = await api.delete('/auth/avatar')
+          if (data.ok) {
+            actualizarUsuario({ avatar: null })
+          }
+        } catch (error) {
+          console.error('Error al quitar avatar:', error)
+          alert('No se pudo eliminar la imagen de perfil.')
+        } finally {
+          setUploading(false)
+          cerrarConfirmacion()
         }
-      } catch (error) {
-        console.error('Error al quitar avatar:', error)
-        alert('No se pudo eliminar la imagen de perfil.')
-      } finally {
-        setUploading(false)
-      }
-    }
+      },
+      true,
+      'Quitar Foto'
+    )
   }
 
   // Formatear marca de tiempo de última conexión
@@ -641,6 +687,82 @@ export default function Configuracion() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación Custom Premium */}
+      {confirmModal.isOpen && (
+        <div 
+          className="modal-overlay" 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            zIndex: 1100,
+            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+          onClick={cerrarConfirmacion}
+        >
+          <div 
+            className="card card-pad" 
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.3)',
+              background: 'var(--navy-900)',
+              animation: 'modalEnter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ 
+                width: 40, height: 40, borderRadius: '50%', 
+                background: confirmModal.isDanger ? 'rgba(239, 68, 68, 0.1)' : 'rgba(99, 102, 241, 0.1)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: confirmModal.isDanger ? 'var(--red-500)' : 'var(--indigo-500)', flexShrink: 0
+              }}>
+                <Shield size={20} />
+              </div>
+              <h3 style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)', margin: 0 }}>
+                {confirmModal.title}
+              </h3>
+            </div>
+            
+            <p style={{ fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.6, margin: '0 0 24px 0' }}>
+              {confirmModal.message}
+            </p>
+
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                style={{ flex: 1, justifyContent: 'center' }}
+                onClick={cerrarConfirmacion}
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                style={{ 
+                  flex: 1, 
+                  justifyContent: 'center',
+                  backgroundColor: confirmModal.isDanger ? 'var(--red-500)' : 'var(--indigo-600)',
+                  borderColor: confirmModal.isDanger ? 'var(--red-500)' : 'var(--indigo-600)',
+                  color: 'white',
+                  fontWeight: 600
+                }}
+                onClick={confirmModal.onConfirm}
+              >
+                {confirmModal.confirmText}
+              </button>
+            </div>
           </div>
         </div>
       )}
