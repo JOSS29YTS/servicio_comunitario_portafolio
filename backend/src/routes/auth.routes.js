@@ -686,6 +686,14 @@ router.put('/usuarios/:id/rol', authMiddleware, checkRole(['Director', 'Subdirec
       return res.status(404).json({ ok: false, mensaje: 'Usuario no encontrado.' })
     }
 
+    // Impedir que un usuario cambie su propio rol
+    if (parseInt(id) === req.usuario.id_usuario) {
+      return res.status(400).json({
+        ok: false,
+        mensaje: 'No puedes cambiar el rol de tu propia cuenta.'
+      })
+    }
+
     // Impedir que un Subdirector cambie el rol de un Director
     const usuarioRolActual = await Rol.findByPk(usuario.id_rol)
     if (req.usuario.rol === 'Subdirector' && usuarioRolActual?.nombre === 'Director') {

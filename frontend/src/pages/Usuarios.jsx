@@ -15,6 +15,16 @@ function formatNombre(nombre = '') {
 export default function Usuarios() {
   const { user: currentUser } = useAuth()
   const [usuarios, setUsuarios] = useState([])
+
+  // Función para determinar si el usuario actual puede gestionar a otro usuario
+  const canManageUser = (targetUser) => {
+    if (!currentUser || !targetUser) return false
+    // Un usuario no puede gestionarse a sí mismo (editar rol, suspender o borrar) en esta sección
+    if (targetUser.id === currentUser.id_usuario) return false
+    // Si el usuario actual es un Subdirector, no puede gestionar de ningún modo a un Director
+    if (currentUser.rol === 'Subdirector' && targetUser.rol === 'Director') return false
+    return true
+  }
   const [roles, setRoles] = useState([])
   const [estados, setEstados] = useState([])
   const [loading, setLoading] = useState(true)
@@ -326,58 +336,60 @@ export default function Usuarios() {
                         </span>
                       </td>
                       <td style={{ textAlign: 'right', paddingRight: 24 }}>
-                        <div className="user-menu-container">
-                          <button 
-                            className="btn btn-ghost btn-sm btn-icon" 
-                            onClick={() => setActiveMenuUserId(activeMenuUserId === u.id ? null : u.id)}
-                            aria-label="Acciones de usuario"
-                          >
-                            <MoreHorizontal size={18} />
-                          </button>
+                        {canManageUser(u) && (
+                          <div className="user-menu-container">
+                            <button 
+                              className="btn btn-ghost btn-sm btn-icon" 
+                              onClick={() => setActiveMenuUserId(activeMenuUserId === u.id ? null : u.id)}
+                              aria-label="Acciones de usuario"
+                            >
+                              <MoreHorizontal size={18} />
+                            </button>
 
-                          {activeMenuUserId === u.id && (
-                            <div className="user-menu-dropdown">
-                              <button 
-                                className="user-menu-item"
-                                onClick={() => handleEditRolClick(u)}
-                                disabled={currentUser?.rol === 'Subdirector' && u.rol === 'Director'}
-                              >
-                                <Edit3 size={14} /> Editar Rol
-                              </button>
-                              
-                              {u.id !== currentUser?.id_usuario && (
+                            {activeMenuUserId === u.id && (
+                              <div className="user-menu-dropdown">
                                 <button 
                                   className="user-menu-item"
-                                  onClick={() => handleToggleEstado(u)}
+                                  onClick={() => handleEditRolClick(u)}
                                   disabled={currentUser?.rol === 'Subdirector' && u.rol === 'Director'}
                                 >
-                                  {u.estado === 'Activo' ? (
-                                    <>
-                                      <UserMinus size={14} /> Suspender Acceso
-                                    </>
-                                  ) : (
-                                    <>
-                                      <UserPlus size={14} /> Activar Acceso
-                                    </>
-                                  )}
+                                  <Edit3 size={14} /> Editar Rol
                                 </button>
-                              )}
-
-                              {u.id !== currentUser?.id_usuario && (
-                                <>
-                                  <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }}></div>
+                                
+                                {u.id !== currentUser?.id_usuario && (
                                   <button 
-                                    className="user-menu-item danger"
-                                    onClick={() => handleDeleteClick(u)}
-                                    disabled={currentUser?.rol === 'Subdirector' && (u.rol === 'Director' || u.rol === 'Subdirector')}
+                                    className="user-menu-item"
+                                    onClick={() => handleToggleEstado(u)}
+                                    disabled={currentUser?.rol === 'Subdirector' && u.rol === 'Director'}
                                   >
-                                    <Trash2 size={14} /> Eliminar Usuario
+                                    {u.estado === 'Activo' ? (
+                                      <>
+                                        <UserMinus size={14} /> Suspender Acceso
+                                      </>
+                                    ) : (
+                                      <>
+                                        <UserPlus size={14} /> Activar Acceso
+                                      </>
+                                    )}
                                   </button>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </div>
+                                )}
+
+                                {u.id !== currentUser?.id_usuario && (
+                                  <>
+                                    <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }}></div>
+                                    <button 
+                                      className="user-menu-item danger"
+                                      onClick={() => handleDeleteClick(u)}
+                                      disabled={currentUser?.rol === 'Subdirector' && (u.rol === 'Director' || u.rol === 'Subdirector')}
+                                    >
+                                      <Trash2 size={14} /> Eliminar Usuario
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -417,58 +429,60 @@ export default function Usuarios() {
                     </div>
                   </div>
                   
-                  <div className="user-menu-container">
-                    <button 
-                      className="btn btn-ghost btn-sm btn-icon" 
-                      onClick={() => setActiveMenuUserId(activeMenuUserId === u.id ? null : u.id)}
-                      aria-label="Acciones de usuario"
-                    >
-                      <MoreHorizontal size={18} />
-                    </button>
+                  {canManageUser(u) && (
+                    <div className="user-menu-container">
+                      <button 
+                        className="btn btn-ghost btn-sm btn-icon" 
+                        onClick={() => setActiveMenuUserId(activeMenuUserId === u.id ? null : u.id)}
+                        aria-label="Acciones de usuario"
+                      >
+                        <MoreHorizontal size={18} />
+                      </button>
 
-                    {activeMenuUserId === u.id && (
-                      <div className="user-menu-dropdown" style={{ top: '36px', right: 0 }}>
-                        <button 
-                          className="user-menu-item"
-                          onClick={() => handleEditRolClick(u)}
-                          disabled={currentUser?.rol === 'Subdirector' && u.rol === 'Director'}
-                        >
-                          <Edit3 size={14} /> Editar Rol
-                        </button>
-
-                        {u.id !== currentUser?.id_usuario && (
+                      {activeMenuUserId === u.id && (
+                        <div className="user-menu-dropdown" style={{ top: '36px', right: 0 }}>
                           <button 
                             className="user-menu-item"
-                            onClick={() => handleToggleEstado(u)}
+                            onClick={() => handleEditRolClick(u)}
                             disabled={currentUser?.rol === 'Subdirector' && u.rol === 'Director'}
                           >
-                            {u.estado === 'Activo' ? (
-                              <>
-                                <UserMinus size={14} /> Suspender Acceso
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus size={14} /> Activar Acceso
-                              </>
-                            )}
+                            <Edit3 size={14} /> Editar Rol
                           </button>
-                        )}
 
-                        {u.id !== currentUser?.id_usuario && (
-                          <>
-                            <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }}></div>
+                          {u.id !== currentUser?.id_usuario && (
                             <button 
-                              className="user-menu-item danger"
-                              onClick={() => handleDeleteClick(u)}
-                              disabled={currentUser?.rol === 'Subdirector' && (u.rol === 'Director' || u.rol === 'Subdirector')}
+                              className="user-menu-item"
+                              onClick={() => handleToggleEstado(u)}
+                              disabled={currentUser?.rol === 'Subdirector' && u.rol === 'Director'}
                             >
-                              <Trash2 size={14} /> Eliminar Usuario
+                              {u.estado === 'Activo' ? (
+                                <>
+                                  <UserMinus size={14} /> Suspender Acceso
+                                </>
+                              ) : (
+                                <>
+                                  <UserPlus size={14} /> Activar Acceso
+                                </>
+                              )}
                             </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                          )}
+
+                          {u.id !== currentUser?.id_usuario && (
+                            <>
+                              <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }}></div>
+                              <button 
+                                className="user-menu-item danger"
+                                onClick={() => handleDeleteClick(u)}
+                                disabled={currentUser?.rol === 'Subdirector' && (u.rol === 'Director' || u.rol === 'Subdirector')}
+                              >
+                                <Trash2 size={14} /> Eliminar Usuario
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -533,7 +547,10 @@ export default function Usuarios() {
                       <option 
                         key={r.id_rol} 
                         value={r.id_rol}
-                        disabled={currentUser?.rol === 'Subdirector' && r.nombre === 'Director'}
+                        disabled={
+                          (currentUser?.rol === 'Subdirector' && r.nombre === 'Director') ||
+                          (selectedUser?.id === currentUser?.id_usuario)
+                        }
                       >
                         {r.nombre}
                       </option>
