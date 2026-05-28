@@ -33,6 +33,7 @@ export default function Configuracion() {
     message: '',
     confirmText: 'Confirmar',
     isDanger: false,
+    hideCancel: false,
     onConfirm: null
   })
 
@@ -43,7 +44,23 @@ export default function Configuracion() {
       message,
       confirmText,
       isDanger,
+      hideCancel: false,
       onConfirm
+    })
+  }
+
+  const abrirAlerta = (title, message, onConfirm = null) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      confirmText: 'Entendido',
+      isDanger: false,
+      hideCancel: true,
+      onConfirm: () => {
+        if (onConfirm) onConfirm()
+        cerrarConfirmacion()
+      }
     })
   }
 
@@ -54,6 +71,7 @@ export default function Configuracion() {
       message: '',
       confirmText: 'Confirmar',
       isDanger: false,
+      hideCancel: false,
       onConfirm: null
     })
   }
@@ -68,15 +86,15 @@ export default function Configuracion() {
   const handleChangePassword = async (e) => {
     e.preventDefault()
     if (!contrasenaActual || !contrasenaNueva || !confirmarContrasena) {
-      alert('Por favor, completa todos los campos.')
+      abrirAlerta('Campos Requeridos', 'Por favor, completa todos los campos.')
       return
     }
     if (contrasenaNueva.length < 6) {
-      alert('La nueva contraseña debe tener al menos 6 caracteres.')
+      abrirAlerta('Contraseña Corta', 'La nueva contraseña debe tener al menos 6 caracteres.')
       return
     }
     if (contrasenaNueva !== confirmarContrasena) {
-      alert('La nueva contraseña y su confirmación no coinciden.')
+      abrirAlerta('Error de Coincidencia', 'La nueva contraseña y su confirmación no coinciden.')
       return
     }
 
@@ -87,7 +105,7 @@ export default function Configuracion() {
         contrasena_nueva: contrasenaNueva
       })
       if (data.ok) {
-        alert(data.mensaje || '✔ Contraseña cambiada exitosamente.')
+        abrirAlerta('Éxito', data.mensaje || '✔ Contraseña cambiada exitosamente.')
         // Resetear campos
         setContrasenaActual('')
         setContrasenaNueva('')
@@ -97,7 +115,7 @@ export default function Configuracion() {
     } catch (error) {
       console.error('Error al cambiar contraseña:', error)
       const msg = error.response?.data?.mensaje || error.response?.data?.errores?.[0] || 'Error al intentar cambiar la contraseña.'
-      alert(msg)
+      abrirAlerta('Error', msg)
     } finally {
       setPasswordLoading(false)
     }
@@ -147,12 +165,12 @@ export default function Configuracion() {
           if (data.ok) {
             setBackupInfo(data.backup)
             loadStats()
-            alert(data.mensaje || 'Respaldo manual completado exitosamente.')
+            abrirAlerta('Sincronización Completada', data.mensaje || 'Respaldo manual completado exitosamente.')
           }
         } catch (error) {
           console.error('Error al forzar sincronización:', error)
           const msg = error.response?.data?.mensaje || 'Error al iniciar la sincronización y respaldo.'
-          alert(msg)
+          abrirAlerta('Error de Sincronización', msg)
         } finally {
           setSyncLoading(false)
           cerrarConfirmacion()
@@ -175,7 +193,7 @@ export default function Configuracion() {
           icon: '/logo_fatima.svg'
         })
       } else {
-        alert('Para activar las notificaciones, debes permitir el acceso en la configuración de tu navegador.')
+        abrirAlerta('Permiso Requerido', 'Para activar las notificaciones, debes permitir el acceso en la configuración de tu navegador.')
       }
     } else {
       setNotifEnabled(false)
@@ -197,7 +215,7 @@ export default function Configuracion() {
           error.response?.data?.mensaje || 
           error.response?.data?.errores?.[0] || 
           'No se pudo actualizar el perfil.'
-        alert(mensaje)
+        abrirAlerta('Error de Perfil', mensaje)
       } finally {
         setLoading(false)
       }
@@ -239,7 +257,7 @@ export default function Configuracion() {
           }
         } catch (error) {
           console.error('Error al subir avatar:', error)
-          alert(error.response?.data?.mensaje || 'Error al subir la imagen de perfil.')
+          abrirAlerta('Error de Carga', error.response?.data?.mensaje || 'Error al subir la imagen de perfil.')
         } finally {
           setUploading(false)
         }
@@ -263,7 +281,7 @@ export default function Configuracion() {
           }
         } catch (error) {
           console.error('Error al quitar avatar:', error)
-          alert('No se pudo eliminar la imagen de perfil.')
+          abrirAlerta('Error de Eliminación', 'No se pudo eliminar la imagen de perfil.')
         } finally {
           setUploading(false)
           cerrarConfirmacion()
@@ -739,14 +757,16 @@ export default function Configuracion() {
             </p>
 
             <div style={{ display: 'flex', gap: 12 }}>
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
-                style={{ flex: 1, justifyContent: 'center' }}
-                onClick={cerrarConfirmacion}
-              >
-                Cancelar
-              </button>
+              {!confirmModal.hideCancel && (
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={cerrarConfirmacion}
+                >
+                  Cancelar
+                </button>
+              )}
               <button 
                 type="button" 
                 className="btn btn-primary" 
