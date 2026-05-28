@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Plus, Trash2, FileText, CheckCircle,
-  User, Upload, ChevronRight
+  User, Upload, ChevronRight, GraduationCap
 } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -14,6 +14,7 @@ const CAMPOS_VACIO = {
   tema:        '',
   descripcion: '',
   estudiantes: [''],
+  tutores:     [''],
   archivo:     null,
 }
 
@@ -67,6 +68,7 @@ export default function NuevoProyecto() {
               tema: p.tema || '',
               descripcion: p.descripcion_breve || p.descripcion || '',
               estudiantes: p.estudiantes?.map(e => e.nombre_completo) || [''],
+              tutores: p.tutores?.map(t => t.nb_tutor) || [''],
               archivo: null,
               archivoExistenteNombre: p.archivos && p.archivos.length > 0 ? p.archivos[0].nombre_archivo : null
             })
@@ -125,6 +127,18 @@ export default function NuevoProyecto() {
     setForm(f => ({ ...f, estudiantes: arr.length ? arr : [''] }))
   }
 
+  const setTutor = (i, value) => {
+    const arr = [...form.tutores]
+    arr[i] = value
+    setForm(f => ({ ...f, tutores: arr }))
+    if (errors.tutores) setErrors(e => ({ ...e, tutores: '' }))
+  }
+  const addTutor = () => setForm(f => ({ ...f, tutores: [...f.tutores, ''] }))
+  const removeTutor = (i) => {
+    const arr = form.tutores.filter((_, idx) => idx !== i)
+    setForm(f => ({ ...f, tutores: arr.length ? arr : [''] }))
+  }
+
 
 
   const handleFile = (file) => {
@@ -141,6 +155,7 @@ export default function NuevoProyecto() {
     if (!form.tema.trim())      e.tema        = 'El tema específico es requerido.'
     if (!form.descripcion.trim()) e.descripcion = 'La descripción es requerida.'
     if (form.estudiantes.every(s => !s.trim())) e.estudiantes = 'Agrega al menos un estudiante.'
+    if (form.tutores.every(s => !s.trim())) e.tutores = 'Agrega al menos un tutor.'
     return e
   }
 
@@ -161,6 +176,10 @@ export default function NuevoProyecto() {
       // Filtrar estudiantes vacíos
       const estudiantesFiltrados = form.estudiantes.map(s => s.trim()).filter(Boolean)
       formData.append('estudiantes', JSON.stringify(estudiantesFiltrados))
+
+      // Filtrar tutores vacíos
+      const tutoresFiltrados = form.tutores.map(t => t.trim()).filter(Boolean)
+      formData.append('tutores', JSON.stringify(tutoresFiltrados))
 
       if (form.archivo) {
         formData.append('archivo_pdf', form.archivo)
@@ -412,10 +431,61 @@ export default function NuevoProyecto() {
           </button>
         </div>
 
-        {/* ── Sección 3: Descripción ── */}
+        {/* ── Sección 3: Tutor(es) Asesor(es) ── */}
         <div className="card card-pad" style={{ marginBottom: 20 }}>
           <div className="form-section-title">
             <span className="section-number">3</span>
+            Tutor(es) Académico(s) o Asesor(es)
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {form.tutores.map((tut, i) => (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <GraduationCap size={15} style={{
+                    position: 'absolute', left: 12, top: '50%',
+                    transform: 'translateY(-50%)', color: 'var(--navy-400)'
+                  }} />
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={`Tutor ${i + 1}`}
+                    value={tut}
+                    onChange={e => setTutor(i, e.target.value)}
+                    style={{ paddingLeft: 36 }}
+                  />
+                </div>
+                {form.tutores.length > 1 && (
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-icon"
+                    onClick={() => removeTutor(i)}
+                    title="Eliminar"
+                  >
+                    <Trash2 size={15} color="var(--red-500)" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          {errors.tutores && (
+            <span className="form-hint" style={{ color: 'var(--red-500)', marginTop: 8, display: 'block' }}>{errors.tutores}</span>
+          )}
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            style={{ marginTop: 12 }}
+            onClick={addTutor}
+          >
+            <Plus size={14} />
+            Agregar tutor
+          </button>
+        </div>
+
+        {/* ── Sección 4: Descripción ── */}
+        <div className="card card-pad" style={{ marginBottom: 20 }}>
+          <div className="form-section-title">
+            <span className="section-number">4</span>
             Descripción del Proyecto
           </div>
           <div className="form-group">
@@ -436,10 +506,10 @@ export default function NuevoProyecto() {
           </div>
         </div>
 
-        {/* ── Sección 4: PDF ── */}
+        {/* ── Sección 5: PDF ── */}
         <div className="card card-pad" style={{ marginBottom: 24 }}>
           <div className="form-section-title">
-            <span className="section-number">4</span>
+            <span className="section-number">5</span>
             Archivo del Proyecto (PDF)
           </div>
 

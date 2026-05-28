@@ -11,7 +11,7 @@ const { Op }  = require('sequelize')
 const upload  = require('../middlewares/upload')
 const authMiddleware = require('../middlewares/auth')
 const checkRole      = require('../middlewares/checkRole')
-const { Proyecto, ArchivoPdf, Estudiante, ProyectoEstudiante, Categoria, Promocion, Usuario, Rol } = require('../models')
+const { Proyecto, ArchivoPdf, Estudiante, ProyectoEstudiante, Categoria, Promocion, Usuario, Rol, Tutor, ProyectoTutor } = require('../models')
 const { sequelize }  = require('../config/database')
 const { registrarAccion } = require('../services/auditService')
 
@@ -43,7 +43,7 @@ router.post(
   async (req, res) => {
     const t = await sequelize.transaction()
     try {
-      const { titulo, descripcion_breve, tema, id_promocion, anio, id_categoria, categoria, estudiantes } = req.body
+      const { titulo, descripcion_breve, tema, id_promocion, anio, id_categoria, categoria, estudiantes, tutores } = req.body
 
       // 1. Obtener o crear la Categoría por su nombre o ID de forma flexible
       let finalIdCategoria = id_categoria
@@ -189,6 +189,49 @@ router.post(
         }
       }
 
+      // 6. Vincular tutores asociados (Relacionales N:M)
+      if (tutores) {
+        let listaTutores = []
+        if (typeof tutores === 'string') {
+          try {
+            listaTutores = JSON.parse(tutores)
+          } catch {
+            listaTutores = tutores.split(',').map(s => s.trim()).filter(Boolean)
+          }
+        } else if (Array.isArray(tutores)) {
+          listaTutores = tutores
+        }
+
+        for (const tut of listaTutores) {
+          const nombreTut = (typeof tut === 'string') ? tut.trim() : tut.nb_tutor?.trim()
+          let idTutor = tut.id_tutor
+
+          if (nombreTut) {
+            // Buscar si el profesor ya existe en la base de datos (insensible a mayúsculas)
+            let tutorObj = await Tutor.findOne({
+              where: sequelize.where(
+                sequelize.fn('LOWER', sequelize.col('nb_tutor')),
+                nombreTut.toLowerCase()
+              ),
+              transaction: t
+            })
+
+            // Si es un profesor nuevo, lo registramos
+            if (!tutorObj) {
+              tutorObj = await Tutor.create({ nb_tutor: nombreTut }, { transaction: t })
+            }
+            idTutor = tutorObj.id_tutor
+          }
+
+          if (idTutor) {
+            await ProyectoTutor.create({
+              id_proyecto: nuevoProyecto.id_proyecto,
+              id_tutor:    idTutor
+            }, { transaction: t })
+          }
+        }
+      }
+
       // Registrar auditoría de creación de proyecto
       await registrarAccion(req, 'CREAR_PROYECTO', `Se registró un nuevo proyecto titulado '${nuevoProyecto.titulo}'`, { id_proyecto: nuevoProyecto.id_proyecto, titulo: nuevoProyecto.titulo })
 
@@ -242,6 +285,12 @@ router.get('/', authMiddleware, async (req, res) => {
           as: 'estudiantes', 
           attributes: ['id_estudiante', 'nombre_completo', 'anio_egreso'],
           through: { attributes: [] } // Excluye la tabla pivote de la respuesta JSON limpia
+        },
+        {
+          model: Tutor,
+          as: 'tutores',
+          attributes: ['id_tutor', 'nb_tutor'],
+          through: { attributes: [] }
         }
       ],
       distinct: true // Previene conteos inflados al usar relaciones N:M
@@ -339,6 +388,14 @@ router.get('/buscar', authMiddleware, async (req, res) => {
       through: { attributes: [] }
     })
 
+    // F. Tutores asociados (siempre incluidos en la respuesta)
+    includeFilters.push({
+      model: Tutor,
+      as: 'tutores',
+      attributes: ['id_tutor', 'nb_tutor'],
+      through: { attributes: [] }
+    })
+
     const proyectos = await Proyecto.findAll({
       where: whereClause,
       include: includeFilters,
@@ -375,6 +432,12 @@ router.get('/:id', authMiddleware, async (req, res) => {
           model: Estudiante, 
           as: 'estudiantes', 
           attributes: ['id_estudiante', 'nombre_completo', 'anio_egreso'],
+          through: { attributes: [] }
+        },
+        {
+          model: Tutor,
+          as: 'tutores',
+          attributes: ['id_tutor', 'nb_tutor'],
           through: { attributes: [] }
         }
       ]
@@ -441,7 +504,7 @@ router.put(
         })
       }
 
-      const { titulo, descripcion_breve, tema, id_promocion, anio, id_categoria, categoria, estudiantes } = req.body
+      const { titulo, descripcion_breve, tema, id_promocion, anio, id_categoria, categoria, estudiantes, tutores } = req.body
 
       // 1. Obtener o crear la Categoría
       let finalIdCategoria = id_categoria || proyecto.id_categoria
@@ -571,6 +634,52 @@ router.put(
         }
       }
 
+      // 5. Vincular tutores asociados (Relacionales N:M)
+      if (tutores !== undefined) {
+        // Eliminar vinculaciones existentes en la tabla intermedia
+        await ProyectoTutor.destroy({ where: { id_proyecto: id }, transaction: t })
+
+        let listaTutores = []
+        if (typeof tutores === 'string') {
+          try {
+            listaTutores = JSON.parse(tutores)
+          } catch {
+            listaTutores = tutores.split(',').map(s => s.trim()).filter(Boolean)
+          }
+        } else if (Array.isArray(tutores)) {
+          listaTutores = tutores
+        }
+
+        for (const tut of listaTutores) {
+          const nombreTut = (typeof tut === 'string') ? tut.trim() : tut.nb_tutor?.trim()
+          let idTutor = tut.id_tutor
+
+          if (nombreTut) {
+            // Buscar si ya existe el tutor (insensible a mayúsculas)
+            let tutorObj = await Tutor.findOne({
+              where: sequelize.where(
+                sequelize.fn('LOWER', sequelize.col('nb_tutor')),
+                nombreTut.toLowerCase()
+              ),
+              transaction: t
+            })
+
+            // Si es un tutor nuevo, lo registramos
+            if (!tutorObj) {
+              tutorObj = await Tutor.create({ nb_tutor: nombreTut }, { transaction: t })
+            }
+            idTutor = tutorObj.id_tutor
+          }
+
+          if (idTutor) {
+            await ProyectoTutor.create({
+              id_proyecto: proyecto.id_proyecto,
+              id_tutor:    idTutor
+            }, { transaction: t })
+          }
+        }
+      }
+
       // Registrar auditoría de edición de proyecto
       await registrarAccion(req, 'EDITAR_PROYECTO', `Se actualizó el proyecto titulado '${proyecto.titulo}'`, { id_proyecto: id, titulo: proyecto.titulo })
 
@@ -586,6 +695,12 @@ router.put(
             model: Estudiante, 
             as: 'estudiantes', 
             attributes: ['id_estudiante', 'nombre_completo', 'anio_egreso'],
+            through: { attributes: [] }
+          },
+          {
+            model: Tutor,
+            as: 'tutores',
+            attributes: ['id_tutor', 'nb_tutor'],
             through: { attributes: [] }
           }
         ]
@@ -647,6 +762,9 @@ router.delete('/:id', authMiddleware, checkRole(['Director', 'Subdirector']), as
 
     // 4. Eliminar las relaciones con estudiantes en la tabla pivote
     await ProyectoEstudiante.destroy({ where: { id_proyecto: id }, transaction: t })
+
+    // 4.5. Eliminar las relaciones con tutores en la tabla intermedia
+    await ProyectoTutor.destroy({ where: { id_proyecto: id }, transaction: t })
 
     // 5. Eliminar el proyecto de la BD
     await proyecto.destroy({ transaction: t })

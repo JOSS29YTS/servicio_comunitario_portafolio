@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, FolderOpen, Tag, Users, Download, Eye, X, FileText } from 'lucide-react'
+import { Search, FolderOpen, Tag, Users, Download, Eye, X, FileText, GraduationCap } from 'lucide-react'
 import api, { descargarArchivo } from '../services/api'
 import PdfPreviewModal from '../components/PdfPreviewModal'
 import EgresadoProfileModal from '../components/EgresadoProfileModal'
@@ -77,6 +77,34 @@ function DetalleModal({ proyecto, onClose, onStudentClick, onPreviewPdf }) {
                 ))
               ) : (
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Sin estudiantes autores</span>
+              )}
+            </div>
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <div className="detail-label" style={{ marginBottom: 8 }}>Tutor(es) Asesor(es)</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {proyecto.tutores && proyecto.tutores.length > 0 ? (
+                proyecto.tutores.map(tut => (
+                  <span 
+                    key={tut.id_tutor} 
+                    className="badge badge-indigo" 
+                    style={{ 
+                      padding: '6px 12px', 
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'rgba(99, 102, 241, 0.08)',
+                      border: '1px solid rgba(99, 102, 241, 0.2)',
+                      color: 'var(--indigo-600)',
+                      fontWeight: 600
+                    }}
+                  >
+                    <GraduationCap size={13} />
+                    <span>{tut.nb_tutor}</span>
+                  </span>
+                ))
+              ) : (
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Sin tutor asignado</span>
               )}
             </div>
           </div>
@@ -427,6 +455,13 @@ export default function Buscar() {
                     nombre_completo: e.nombre_completo,
                     anio_egreso: e.anio_egreso
                   })) || [],
+                  tutores: p.tutores?.map(t => ({
+                    id_tutor: t.id_tutor,
+                    nb_tutor: t.nb_tutor
+                  })) || [],
+                  tutor: p.tutores && p.tutores.length > 0 
+                    ? p.tutores.map(t => t.nb_tutor).join(', ') 
+                    : 'No asignado',
                   tienePdf: tienePdf,
                   rutaPdf: tienePdf ? p.archivos[0].ruta_almacenamiento : null,
                   resumen_ia: p.resumen_ia
@@ -470,6 +505,10 @@ export default function Buscar() {
                           ) : (
                             <span>Sin autor registrado</span>
                           )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <GraduationCap size={14} />
+                          Tutor: <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{projectObj.tutor}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <Tag size={14} />

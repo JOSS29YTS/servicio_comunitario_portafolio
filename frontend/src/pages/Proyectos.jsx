@@ -5,7 +5,7 @@
 // ============================================================
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Eye, Download, Users, FileText, Search, Filter, FolderOpen, Edit3 } from 'lucide-react'
+import { Plus, Eye, Download, Users, FileText, Search, Filter, FolderOpen, Edit3, GraduationCap } from 'lucide-react'
 import api, { descargarArchivo } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import PdfPreviewModal from '../components/PdfPreviewModal'
@@ -81,6 +81,34 @@ function DetalleModal({ proyecto, onClose, onStudentClick, onPreviewPdf }) {
                 ))
               ) : (
                 <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Sin estudiantes autores</span>
+              )}
+            </div>
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            <div className="detail-label" style={{ marginBottom: 8 }}>Tutor(es) Asesor(es)</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {proyecto.tutores && proyecto.tutores.length > 0 ? (
+                proyecto.tutores.map(tut => (
+                  <span 
+                    key={tut.id_tutor} 
+                    className="badge badge-indigo" 
+                    style={{ 
+                      padding: '6px 12px', 
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'rgba(99, 102, 241, 0.08)',
+                      border: '1px solid rgba(99, 102, 241, 0.2)',
+                      color: 'var(--indigo-600)',
+                      fontWeight: 600
+                    }}
+                  >
+                    <GraduationCap size={13} />
+                    <span>{tut.nb_tutor}</span>
+                  </span>
+                ))
+              ) : (
+                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Sin tutor asignado</span>
               )}
             </div>
           </div>
@@ -308,6 +336,14 @@ export default function Proyectos() {
               nombre_completo: e.nombre_completo,
               anio_egreso: e.anio_egreso
             })) || [],
+            // Mapear tutores para estructura y compatibilidad retroactiva
+            tutores: p.tutores?.map(t => ({
+              id_tutor: t.id_tutor,
+              nb_tutor: t.nb_tutor
+            })) || [],
+            tutor: p.tutores && p.tutores.length > 0 
+              ? p.tutores.map(t => t.nb_tutor).join(', ') 
+              : 'No asignado',
             tienePdf: p.archivos && p.archivos.length > 0,
             rutaPdf: p.archivos && p.archivos.length > 0 ? p.archivos[0].ruta_almacenamiento : null,
             resumen_ia: p.resumen_ia
@@ -336,6 +372,7 @@ export default function Proyectos() {
     const matchSearch = !search ||
       p.nombre.toLowerCase().includes(search.toLowerCase()) ||
       p.estudiantes.some(e => e.nombre_completo.toLowerCase().includes(search.toLowerCase())) ||
+      p.tutor.toLowerCase().includes(search.toLowerCase()) ||
       p.tema.toLowerCase().includes(search.toLowerCase())
     const matchAnio = !filterAnio || Number(p.anio) === Number(filterAnio)
     const matchCat  = !filterCat  || p.categoria === filterCat

@@ -27,6 +27,8 @@ async function sync() {
   console.log('  • proyecto')
   console.log('  • estudiante')
   console.log('  • proyecto_estudiante')
+  console.log('  • tutor')
+  console.log('  • proyecto_tutor')
   console.log('  • archivo_pdf')
   console.log('  • envio')
   console.log('  • destinatario_envio')
