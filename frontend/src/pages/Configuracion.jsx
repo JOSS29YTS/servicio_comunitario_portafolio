@@ -16,6 +16,14 @@ export default function Configuracion() {
   const [uploading, setUploading] = useState(false)
   const [backupInfo, setBackupInfo] = useState(null)
   const [syncLoading, setSyncLoading] = useState(false)
+  const [stats, setStats] = useState({
+    totalProyectos: 0,
+    totalPdfs: 0,
+    usuariosActivos: 0,
+    espacioUsadoDiscoBytes: 0,
+    limiteDiscoBytes: 500 * 1024 * 1024,
+    porcentajeUso: 0
+  })
   const fileInputRef = useRef(null)
 
   // Estados para Cambiar Contraseña
@@ -76,11 +84,23 @@ export default function Configuracion() {
     }
   }
 
+  const loadStats = async () => {
+    try {
+      const { data } = await api.get('/dashboard/stats')
+      if (data.ok && data.stats) {
+        setStats(data.stats)
+      }
+    } catch (error) {
+      console.error('Error al obtener estadísticas:', error)
+    }
+  }
+
   // Sincronizar el teléfono con los datos cargados del usuario y obtener respaldo
   useEffect(() => {
     if (user) {
       setTelefono(user.telefono || '')
       loadLastBackup()
+      loadStats()
     }
   }, [user])
 
@@ -91,6 +111,7 @@ export default function Configuracion() {
         const { data } = await api.post('/backup/sincronizar')
         if (data.ok) {
           setBackupInfo(data.backup)
+          loadStats()
           alert(data.mensaje || 'Respaldo manual completado exitosamente.')
         }
       } catch (error) {
@@ -391,21 +412,21 @@ export default function Configuracion() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div className="stat-row">
                 <div className="stat-label"><FileText size={16} color="var(--indigo-500)" /> Proyectos Registrados</div>
-                <div className="stat-value">0</div>
+                <div className="stat-value">{stats.totalProyectos}</div>
               </div>
               <div className="stat-row">
                 <div className="stat-label"><Database size={16} color="var(--green-500)" /> Documentos (PDFs)</div>
-                <div className="stat-value">0</div>
+                <div className="stat-value">{stats.totalPdfs}</div>
               </div>
               <div className="stat-row">
                 <div className="stat-label"><Users size={16} color="var(--purple-500)" /> Usuarios Activos</div>
-                <div className="stat-value">1</div>
+                <div className="stat-value">{stats.usuariosActivos}</div>
               </div>
               <div className="stat-row" style={{ borderBottom: 'none' }}>
                 <div className="stat-label"><HardDrive size={16} color="var(--amber-500)" /> Almacenamiento</div>
                 <div style={{ textAlign: 'right' }}>
-                  <div className="stat-value">0 MB</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>de 500 MB usados</div>
+                  <div className="stat-value">{(stats.espacioUsadoDiscoBytes / 1024 / 1024).toFixed(1)} MB</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>de {(stats.limiteDiscoBytes / 1024 / 1024).toFixed(0)} MB usados</div>
                 </div>
               </div>
             </div>
