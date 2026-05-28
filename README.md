@@ -11,13 +11,13 @@ El sistema está estructurado con una arquitectura moderna de **Single Page Appl
 
 ---
 
-## 🔑 Cuenta de Demostración Pública (Semilla)
+## 🔑 Cuenta de Demostración Pública (Portafolio)
 
-Al ejecutar el script de inicialización (`pnpm run db:seed`), el sistema creará un perfil de demostración pública diseñado para exhibir de forma segura tu portafolio académico a terceros, reclutadores o docentes visitantes:
+Al ejecutar el script de inicialización (`pnpm run db:seed`), el sistema creará un perfil de demostración diseñado para exhibir de forma segura el portafolio a reclutadores, docentes visitantes o cualquier persona interesada:
 
-* **Usuario/Email**: `demo@admin.com`
-* **Contraseña**: `demo123` (solo necesaria si inicias sesión manualmente; en portafolio usa el botón **Probar demo**)
-* **Privilegios**: Rol de **Subdirector** (puede visualizar y registrar proyectos, simular la sincronización y operar la plataforma de manera segura, pero sin permisos para eliminar información de base de datos o modificar a los usuarios directivos principales).
+* **Email**: `demo@admin.com`
+* **Acceso**: Un clic con el botón **Probar demo** (no requiere contraseña)
+* **Privilegios**: Rol de solo lectura — puede visualizar proyectos, dashboard, usuarios y configuración, pero no puede crear, editar ni eliminar datos.
 
 ### Modo demostración (despliegue en portafolio)
 
@@ -39,6 +39,7 @@ VITE_DEMO_MODE=true
 Con esto el sistema:
 
 - Muestra el botón **Probar demo** en el login (acceso sin escribir contraseña).
+- Agrega un badge **Demo** persistente en el header de todas las páginas.
 - Solo permite iniciar sesión con `demo@admin.com` (no con `director@admin.com` ni otras cuentas).
 - Bloquea registro, recuperación y cambio de contraseña (en API y en la interfaz).
 - Oculta el enlace **Cambiar Contraseña** en Configuración.
@@ -46,8 +47,6 @@ Con esto el sistema:
 En **desarrollo local**, deja `DEMO_MODE=false` y `VITE_DEMO_MODE=false` para probar registro, recuperación de clave y la cuenta de Director.
 
 **Seguridad en producción:** usa `DIRECTOR_EMAIL` y `DIRECTOR_PASSWORD` fuertes y privados (nunca los valores por defecto del seed). No publiques credenciales del Director en el README ni en la UI del portafolio.
-
-Si un visitante altera la clave demo, ejecuta de nuevo `pnpm run db:seed` en el backend para restaurar `demo123`.
 
 ---
 

@@ -1,29 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { IS_DEMO_MODE, DEMO_EMAIL, DEMO_PASSWORD } from '../config/demoMode'
+import { IS_DEMO_MODE, DEMO_EMAIL } from '../config/demoMode'
 import { Eye, EyeOff, Lock, Mail, AlertCircle, ArrowLeft, Sun, Moon, Play } from 'lucide-react'
-
-function RevealPassword() {
-  const [showPwd, setShowPwd] = React.useState(false)
-  return (
-    <p style={{ fontSize: 12, color: 'var(--navy-400)', margin: '0 0 12px', lineHeight: 1.4 }}>
-      Acceso manual:{' '}
-      {showPwd ? (
-        <>contraseña <code style={{ color: 'var(--indigo-400)' }}>{DEMO_PASSWORD}</code></>
-      ) : (
-        <span
-          onClick={() => setShowPwd(true)}
-          style={{ color: 'var(--indigo-400)', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline dotted', transition: 'color 0.2s' }}
-          onMouseEnter={e => e.target.style.color = 'var(--indigo-300)'}
-          onMouseLeave={e => e.target.style.color = 'var(--indigo-400)'}
-        >
-          ¿Contraseña?
-        </span>
-      )}
-    </p>
-  )
-}
 
 export default function Login() {
   const [email, setEmail]       = useState(IS_DEMO_MODE ? DEMO_EMAIL : '')
@@ -264,7 +243,6 @@ export default function Login() {
           </div>
 
           {IS_DEMO_MODE && (
-            <RevealPassword />
           )}
 
           <button
