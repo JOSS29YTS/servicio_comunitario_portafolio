@@ -11,22 +11,13 @@ El sistema está estructurado con una arquitectura moderna de **Single Page Appl
 
 ---
 
-## 🔑 Usuarios Predeterminados y Roles de Acceso (Semilla)
+## 🔑 Cuenta de Demostración Pública (Semilla)
 
-Al ejecutar el script de inicialización (`pnpm run db:seed`), el sistema creará dos perfiles de acceso clave para balancear la exploración pública y la administración privada:
+Al ejecutar el script de inicialización (`pnpm run db:seed`), el sistema creará un perfil de demostración pública diseñado para exhibir de forma segura tu portafolio académico a terceros, reclutadores o docentes visitantes sin riesgos de seguridad:
 
-### 1. 👥 Cuenta de Demostración Pública (Rol: Subdirector)
-Diseñada para exhibir de forma segura tu portafolio académico a terceros, reclutadores o docentes visitantes sin riesgos de seguridad:
 * **Usuario/Email**: `demo@admin.com`
 * **Contraseña**: `demo123`
-* **Privilegios**: Rol de **Subdirector** (puede gestionar proyectos, registrar profesores, realizar sincronizaciones y respaldos, pero **no** tiene permisos para eliminar o desactivar a usuarios directivos como el Director principal).
-
-### 2. 🔐 Cuenta de Director Principal (Rol: Director - Privada)
-Tu cuenta personal de control total sobre el sistema:
-* **Usuario/Email**: Configurable mediante la variable `DIRECTOR_EMAIL` en `.env` (valor por defecto: `director@admin.com`).
-* **Contraseña**: Configurable mediante la variable `DIRECTOR_PASSWORD` en `.env` (valor por defecto: `director123`).
-* **Nombre**: Configurable mediante la variable `DIRECTOR_NAME` en `.env` (valor por defecto: `Alejandro Villa`).
-* **Privilegios**: Rol de **Director** (control total del sistema, auditorías completas, desactivación y eliminación de cualquier usuario, incluido el Subdirector de demostración).
+* **Privilegios**: Rol de **Subdirector** (puede visualizar y registrar proyectos, simular la sincronización y operar la plataforma de manera segura, pero sin permisos para eliminar información de base de datos o modificar a los usuarios directivos principales).
 
 ---
 
