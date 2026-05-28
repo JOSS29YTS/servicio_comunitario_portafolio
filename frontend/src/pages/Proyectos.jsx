@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Eye, Download, Users, FileText, Search, Filter, FolderOpen, Edit3, GraduationCap } from 'lucide-react'
+import { IS_DEMO_MODE } from '../config/demoMode'
 import api, { descargarArchivo } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import PdfPreviewModal from '../components/PdfPreviewModal'
@@ -241,7 +242,7 @@ function DetalleModal({ proyecto, onClose, onStudentClick, onPreviewPdf }) {
           })()}
         </div>
         <div className="modal-footer">
-          {(user?.rol === 'Director' || user?.rol === 'Subdirector') && (
+          {!IS_DEMO_MODE && (user?.rol === 'Director' || user?.rol === 'Subdirector') && (
             <button 
               className="btn btn-secondary"
               style={{ marginRight: 'auto', gap: 6, display: 'inline-flex', alignItems: 'center' }}
@@ -267,13 +268,15 @@ function DetalleModal({ proyecto, onClose, onStudentClick, onPreviewPdf }) {
                 <Eye size={15} />
                 Visualizar PDF
               </button>
-              <button 
-                className="btn btn-secondary btn-icon"
-                title="Descargar PDF"
-                onClick={() => descargarArchivo(proyecto.rutaPdf, `${proyecto.nombre.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`)}
-              >
-                <Download size={15} />
-              </button>
+              {!IS_DEMO_MODE && (
+                <button 
+                  className="btn btn-secondary btn-icon"
+                  title="Descargar PDF"
+                  onClick={() => descargarArchivo(proyecto.rutaPdf, `${proyecto.nombre.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`)}
+                >
+                  <Download size={15} />
+                </button>
+              )}
             </div>
           ) : (
             <span style={{ fontSize: 12.5, color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -538,16 +541,18 @@ export default function Proyectos() {
                           >
                             <Eye size={15} className="text-indigo-400" />
                           </button>
-                          <button
-                            className="btn btn-ghost btn-sm btn-icon"
-                            title="Descargar PDF"
-                            onClick={() => descargarArchivo(p.rutaPdf, `${p.nombre.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`)}
-                          >
-                            <Download size={15} />
-                          </button>
+                          {!IS_DEMO_MODE && (
+                            <button
+                              className="btn btn-ghost btn-sm btn-icon"
+                              title="Descargar PDF"
+                              onClick={() => descargarArchivo(p.rutaPdf, `${p.nombre.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`)}
+                            >
+                              <Download size={15} />
+                            </button>
+                          )}
                         </>
                       )}
-                      {(user?.rol === 'Director' || user?.rol === 'Subdirector') && (
+                      {!IS_DEMO_MODE && (user?.rol === 'Director' || user?.rol === 'Subdirector') && (
                         <button
                           className="btn btn-ghost btn-sm btn-icon"
                           title="Editar Proyecto"

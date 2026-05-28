@@ -338,14 +338,16 @@ export default function Configuracion() {
                       user?.iniciales || 'AV'
                     )}
                   </div>
-                  <button 
-                    className="avatar-edit-btn" 
-                    title="Cambiar foto" 
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                  >
-                    <Camera size={14} />
-                  </button>
+                  {!IS_DEMO_MODE && (
+                    <button 
+                      className="avatar-edit-btn" 
+                      title="Cambiar foto" 
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      <Camera size={14} />
+                    </button>
+                  )}
                   <input 
                     type="file" 
                     ref={fileInputRef} 
@@ -354,7 +356,7 @@ export default function Configuracion() {
                     style={{ display: 'none' }} 
                   />
                 </div>
-                {user?.avatar && (
+                {!IS_DEMO_MODE && user?.avatar && (
                   <button 
                     className="btn btn-ghost btn-sm" 
                     onClick={handleRemoveAvatar} 
@@ -373,13 +375,15 @@ export default function Configuracion() {
                   </button>
                 )}
               </div>
-              <button 
-                className={`btn ${isEditing ? 'btn-primary' : 'btn-secondary'}`}
-                onClick={handleSaveProfile}
-                disabled={loading || uploading}
-              >
-                {loading ? 'Guardando...' : (isEditing ? 'Guardar' : 'Editar Perfil')}
-              </button>
+              {!IS_DEMO_MODE && (
+                <button 
+                  className={`btn ${isEditing ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={handleSaveProfile}
+                  disabled={loading || uploading}
+                >
+                  {loading ? 'Guardando...' : (isEditing ? 'Guardar' : 'Editar Perfil')}
+                </button>
+              )}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

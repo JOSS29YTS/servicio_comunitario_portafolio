@@ -11,6 +11,7 @@ const { Op }  = require('sequelize')
 const upload  = require('../middlewares/upload')
 const authMiddleware = require('../middlewares/auth')
 const checkRole      = require('../middlewares/checkRole')
+const blockIfDemo    = require('../middlewares/demoBlock')
 const { Proyecto, ArchivoPdf, Estudiante, ProyectoEstudiante, Categoria, Promocion, Usuario, Rol, Tutor, ProyectoTutor } = require('../models')
 const { sequelize }  = require('../config/database')
 const { registrarAccion } = require('../services/auditService')
@@ -470,6 +471,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 router.put(
   '/:id',
   authMiddleware,
+  blockIfDemo,
   (req, res, next) => {
     // Permitir la carga opcional de un nuevo archivo PDF
     upload.single('archivo_pdf')(req, res, (err) => {
@@ -730,7 +732,7 @@ router.put(
 // ============================================================
 // 6. DELETE /api/proyectos/:id — Eliminar Proyecto existente
 // ============================================================
-router.delete('/:id', authMiddleware, checkRole(['Director', 'Subdirector']), async (req, res) => {
+router.delete('/:id', authMiddleware, blockIfDemo, checkRole(['Director', 'Subdirector']), async (req, res) => {
   const { id } = req.params
   const t = await sequelize.transaction()
   try {

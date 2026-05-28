@@ -24,6 +24,7 @@ const { sendRecoveryEmail } = require('../utils/emailService')
 const { registrarAccion } = require('../services/auditService')
 const { isDemoMode, getDemoEmail } = require('../config/demoMode')
 const { blockIfDemoMode, restrictLoginToDemo } = require('../middlewares/demoMode')
+const blockIfDemo = require('../middlewares/demoBlock')
 
 const router = express.Router()
 
@@ -422,6 +423,7 @@ router.post('/logout', authMiddleware, (req, res) => {
 router.put(
   '/perfil',
   authMiddleware,
+  blockIfDemo,
   [
     body('telefono')
       .optional({ checkFalsy: true })
@@ -523,7 +525,7 @@ router.put(
 
 // ── PUT /api/auth/avatar ──────────────────────────────────
 // Cargar/Actualizar imagen de avatar del usuario (Base64 ligero)
-router.put('/avatar', authMiddleware, async (req, res) => {
+router.put('/avatar', authMiddleware, blockIfDemo, async (req, res) => {
   try {
     const { fileData } = req.body
     if (!fileData) {
@@ -604,7 +606,7 @@ router.put('/avatar', authMiddleware, async (req, res) => {
 
 // ── DELETE /api/auth/avatar ───────────────────────────────
 // Eliminar imagen de avatar personalizada y volver a las iniciales
-router.delete('/avatar', authMiddleware, async (req, res) => {
+router.delete('/avatar', authMiddleware, blockIfDemo, async (req, res) => {
   try {
     const usuario = await Usuario.findByPk(req.usuario.id_usuario)
     if (!usuario) {
