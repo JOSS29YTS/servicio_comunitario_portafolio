@@ -57,7 +57,7 @@ export default function Header({ onMenuClick }) {
           'ELIMINAR_USUARIO', 'RESPALDO_COMPLETADO_AUTO', 'RESPALDO_COMPLETADO_MANUAL'
         ]
         const filtered = data.logs.filter(log => interestActions.includes(log.accion))
-        setNotifications(filtered.slice(0, 5))
+        setNotifications(filtered.slice(0, 3))
       }
     } catch (err) {
       console.error('[HEADER] Error al consultar bitácora:', err)
