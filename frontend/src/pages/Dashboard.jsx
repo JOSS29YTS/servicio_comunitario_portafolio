@@ -464,7 +464,7 @@ export default function Dashboard() {
       {/* Contenido principal */}
       <div className="dashboard-layout">
         {/* Tabla proyectos recientes */}
-        <div className="card">
+        <div className="card" style={{ alignSelf: 'start' }}>
           <div style={{
             padding: '20px 24px',
             borderBottom: '1px solid var(--border-subtle)',
