@@ -3236,3 +3236,25 @@ input:checked+.slider:before {
 :root.dark .hero-logo-large img.no-invert {
   filter: none !important;
 }
+
+/* Scrollbar personalizado y elegante */
+.custom-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: var(--navy-200);
+  border-radius: 4px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--navy-300);
+}
+
+:root.dark .custom-scroll::-webkit-scrollbar-thumb {
+  background: var(--navy-800);
+}
+:root.dark .custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--navy-700);
+}

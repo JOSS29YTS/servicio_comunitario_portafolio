@@ -561,7 +561,7 @@ export default function Dashboard() {
             <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
               Por Categoría
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '220px', overflowY: 'auto', paddingRight: '6px' }} className="custom-scroll">
               {categoriasLista.length === 0 ? (
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>
                   No hay categorías registradas.
