@@ -247,7 +247,7 @@ function DetalleModal({ proyecto, onClose, onStudentClick, onPreviewPdf }) {
                   onPreviewPdf(proyecto);
                 }}
               >
-                <Eye size={15} />
+                <FileText size={15} />
                 Visualizar PDF
               </button>
               <button 
@@ -531,7 +531,7 @@ export default function Buscar() {
                             style={{ gap: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                             onClick={() => setActivePdf(projectObj)}
                           >
-                            <Eye size={15} className="text-indigo-400" /> Visualizar PDF
+                            <FileText size={15} className="text-indigo-400" /> Visualizar PDF
                           </button>
                           <button 
                             className="btn btn-primary"

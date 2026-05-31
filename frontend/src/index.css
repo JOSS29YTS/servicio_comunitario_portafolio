@@ -1426,6 +1426,22 @@ tr:hover td {
   gap: 12px;
 }
 
+/* Modals en Modo Oscuro */
+:root.dark .modal-card {
+  background: var(--navy-900);
+  border: 1px solid var(--navy-800);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+:root.dark .modal-header,
+:root.dark .modal-footer {
+  border-color: var(--navy-800);
+}
+
+:root.dark .modal-header h3 {
+  color: var(--navy-50);
+}
+
 /* ============================================
    ANIMATIONS
    ============================================ */

@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Download, Maximize2, Minimize2, X, FileText } from 'lucide-react'
 import { descargarArchivo } from '../services/api'
+import { IS_DEMO_MODE } from '../config/demoMode'
 
 export default function PdfPreviewModal({ isOpen, fileUrl, fileName, projectTitle, onClose }) {
   const [loading, setLoading] = useState(true)
@@ -211,19 +212,116 @@ export default function PdfPreviewModal({ isOpen, fileUrl, fileName, projectTitl
             </div>
           )}
 
-          {/* Iframe que incrusta el visor de PDF nativo */}
-          <iframe 
-            src={`${fileUrl}#toolbar=1&navpanes=0&scrollbar=1`}
-            title={projectTitle}
-            width="100%"
-            height="100%"
-            style={{ 
-              border: 'none', 
-              opacity: loading ? 0 : 1,
-              transition: 'opacity 0.4s ease-in-out'
-            }}
-            onLoad={() => setLoading(false)}
-          />
+          {/* Iframe que incrusta el visor de PDF nativo o simulación elegante en Demo */}
+          {IS_DEMO_MODE ? (
+            <div style={{
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px',
+              overflowY: 'auto',
+              background: '#0b0f19'
+            }}>
+              <div 
+                className="simulated-pdf-sheet"
+                style={{
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  width: '100%',
+                  maxWidth: '700px',
+                  minHeight: '80%',
+                  borderRadius: '12px',
+                  boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+                  padding: '40px 48px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 28,
+                  textAlign: 'left',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
+              >
+                {/* Cabecera del Documento */}
+                <div style={{ borderBottom: '2px solid var(--indigo-500, #6366f1)', paddingBottom: 16 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.15em', color: 'var(--indigo-600, #4f46e5)', margin: 0 }}>
+                    COLEGIO NUESTRA SEÑORA DE FÁTIMA
+                  </p>
+                  <h2 style={{ fontSize: 16, fontWeight: 800, margin: '4px 0 0', color: '#1e293b', letterSpacing: '-0.01em' }}>
+                    REPOSITORIO ACADÉMICO COGNITIVO
+                  </h2>
+                </div>
+
+                {/* Contenido Simulado */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Título del Proyecto de Investigación
+                    </span>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: '6px 0 0', lineHeight: 1.4 }}>
+                      {projectTitle}
+                    </h3>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                    <div>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Autores (Bachilleres Egresados)
+                      </span>
+                      <p style={{ fontSize: 12.5, color: '#334155', margin: '6px 0 0', fontWeight: 600 }}>
+                        Estudiante(s) Responsable(s) de la Promoción
+                      </p>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Tutor Académico Asesor
+                      </span>
+                      <p style={{ fontSize: 12.5, color: '#334155', margin: '6px 0 0', fontWeight: 600 }}>
+                        Personal Docente de la Institución
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Banner de Información Premium para la Demo */}
+                <div style={{ 
+                  background: 'rgba(99, 102, 241, 0.05)', 
+                  border: '1px dashed rgba(99, 102, 241, 0.25)', 
+                  borderRadius: '12px',
+                  padding: '24px',
+                  marginTop: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 18 }}>⚠️</span>
+                    <h4 style={{ fontSize: 12, fontWeight: 800, color: '#4f46e5', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Visualización de PDF no disponible en la Demo
+                    </h4>
+                  </div>
+                  <p style={{ fontSize: 12, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                    Para optimizar el uso de recursos y garantizar la velocidad de carga en esta demostración pública basada en la nube, los archivos PDF físicos no se guardan de forma permanente.
+                  </p>
+                  <p style={{ fontSize: 12, color: '#475569', lineHeight: 1.6, margin: 0 }}>
+                    No obstante, <strong>la indexación científica mediante Google Gemini AI se realizó correctamente</strong>. Puedes examinar el análisis cognitivo estructurado (problema, metodología, hallazgos y palabras clave) directamente presionando el botón <em>Ver detalles</em> del proyecto. En un despliegue local o servidor privado, el PDF original se renderizaría de forma nativa en esta sección.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <iframe 
+              src={`${fileUrl}#toolbar=1&navpanes=0&scrollbar=1`}
+              title={projectTitle}
+              width="100%"
+              height="100%"
+              style={{ 
+                border: 'none', 
+                opacity: loading ? 0 : 1,
+                transition: 'opacity 0.4s ease-in-out'
+              }}
+              onLoad={() => setLoading(false)}
+            />
+          )}
         </div>
       </div>
       

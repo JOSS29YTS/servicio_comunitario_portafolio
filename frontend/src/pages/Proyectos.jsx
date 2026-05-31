@@ -265,7 +265,7 @@ function DetalleModal({ proyecto, onClose, onStudentClick, onPreviewPdf }) {
                   onPreviewPdf(proyecto);
                 }}
               >
-                <Eye size={15} />
+                <FileText size={15} />
                 Visualizar PDF
               </button>
               {!IS_DEMO_MODE && (
@@ -539,7 +539,7 @@ export default function Proyectos() {
                             title="Visualizar PDF"
                             onClick={() => setActivePdf(p)}
                           >
-                            <Eye size={15} className="text-indigo-400" />
+                            <FileText size={15} className="text-indigo-400" />
                           </button>
                           {!IS_DEMO_MODE && (
                             <button
