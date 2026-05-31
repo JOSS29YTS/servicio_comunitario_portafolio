@@ -13,6 +13,10 @@ El sistema está estructurado con una arquitectura moderna de **Single Page Appl
 
 ## 🔑 Cuenta de Demostración Pública (Portafolio)
 
+> [!IMPORTANT]
+> **⚡ Nota de Despliegue (Render - Capa Gratuita):**
+> Dado que el backend está alojado en la capa gratuita de **Render**, el servidor se suspende automáticamente tras 15 minutos de inactividad. Si eres el primer visitante reciente, la primera carga de datos o el proceso de login (con el botón *Probar demo*) puede tardar aproximadamente **50 segundos** en responder mientras el servidor se reactiva (*cold start*). Una vez encendido, el sistema responderá de forma instantánea. ¡Agradecemos tu paciencia!
+
 Al ejecutar el script de inicialización (`pnpm run db:seed`), el sistema creará un perfil de demostración diseñado para exhibir de forma segura el portafolio a reclutadores, docentes visitantes o cualquier persona interesada:
 
 * **Email**: `demo@admin.com`
